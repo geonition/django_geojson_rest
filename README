@@ -1,1 +1,1 @@
-This django applications provides a REST interface for saving, updating, querying and deleting geojson features.
+This django application provides a REST interface for saving, updating, querying and deleting geojson features.
