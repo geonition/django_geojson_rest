@@ -2,7 +2,7 @@
 from django.conf.urls.defaults import patterns
 from django.conf.urls.defaults import url
 
-urlpatterns = patterns('softgis_feature.views',
+urlpatterns = patterns('geojson_rest.views',
                        
             #feature rest
             url(r'^',

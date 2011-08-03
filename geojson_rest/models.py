@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.gis.db import models as gis_models
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
-from manager import MongoDBManager
+from geonition_utils.manager import MongoDBManager
 from pymongo import Connection
 
 import datetime
@@ -54,7 +54,7 @@ class Feature(gis_models.Model):
     <type 'datetime.datetime'>
     """
     geometry = gis_models\
-                .GeometryField(srid=settings.SPATIAL_REFERENCE_SYSTEM_ID)
+                .GeometryField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
     user = models.ForeignKey(User)
     
     create_time = models.DateTimeField(auto_now_add=True, null=True)
