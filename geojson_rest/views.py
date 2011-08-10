@@ -9,7 +9,7 @@ from django.contrib.gis.gdal import OGRGeometry
 from django.contrib.gis.geos.error import GEOSException
 from models import Feature
 from models import Property
-from geonition_utils.HttpResponseExtenders import HttpResponseNotAuthorized
+from geonition_utils.HttpResponseExtenders import HttpResponseUnauthorized
 from django.contrib.gis.gdal.error import OGRException
 from geonition_utils.Commons import CustomError, SoftGISFormatUtils
 
@@ -157,7 +157,7 @@ def feature(request):
         
         if not request.user.is_authenticated():
             logger.warning("There was a %s request to features but the user was not authenticated" % request.method)
-            return HttpResponseNotAuthorized(_("You need to login or create a session in order to query features"))  
+            return HttpResponseUnauthorized(_("You need to login or create a session in order to query features"))  
         
         # get the definied limiting parameters
         limiting_param = request.GET.items()
@@ -356,7 +356,7 @@ def feature(request):
         
         if not request.user.is_authenticated():
             logger.warning("There was a %s request to features but the user was not authenticated" % request.method)
-            return HttpResponseNotAuthorized(_("You need to login or create a session in order to create features"))    
+            return HttpResponseUnauthorized(_("You need to login or create a session in order to create features"))    
 
         #supports saving geojson Features
         feature_json = None
@@ -432,7 +432,7 @@ def feature(request):
     elif request.method == "PUT":
         
         if not request.user.is_authenticated():
-            return HttpResponseNotAuthorized(_("You need to login or create a session in order to update features"))    
+            return HttpResponseUnauthorized(_("You need to login or create a session in order to update features"))    
         
         try:
             #supports updating geojson Features
@@ -495,7 +495,7 @@ def feature(request):
         Get the array with the feature ids for delete
         """
         if not request.user.is_authenticated():
-            return HttpResponseNotAuthorized(_("You need to login or create a session in order to delete features"))
+            return HttpResponseUnauthorized(_("You need to login or create a session in order to delete features"))
             
         try:
             feature_ids = json.loads(request.GET.get("ids","[]"))
