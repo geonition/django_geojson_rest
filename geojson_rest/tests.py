@@ -38,7 +38,7 @@ class FeatureTest(TestCase):
        
     def test_feature(self):
         """
-        Black box testing for REST urls
+        Black box testing for REST
         """
         #login testuser
         self.client.login(username='testuser', password='passwd')
@@ -261,6 +261,21 @@ class FeatureTest(TestCase):
             self.assertTrue(feature.has_key('id'),
                             "The returned feature in FeatureCollection " + \
                             "did not have an id")
+            
+        #limit the amount of features returned with count parameter
+        #first get all features to get the total amount
+        response = self.client.get(reverse('api_feature'))
+        total_amount_of_features = len(json.loads(response.content)['features'])
+        #set the limit amount
+        limit_to_amount = total_amount_of_features - 1
+        
+        response = self.client.get("%s%s%i" % (reverse('api_feature'), "?count=", limit_to_amount))
+        returned_amount_of_features = len(json.loads(response.content)['features'])
+        self.assertNotEqual(total_amount_of_features,
+                           returned_amount_of_features,
+                           "Limiting amount of features returned did not work, " + \
+                           "count param %i but amount of features returned %i" % (limit_to_amount, returned_amount_of_features))
+        
 
         
     def test_mongodb(self):
@@ -329,6 +344,15 @@ class FeatureTest(TestCase):
             
             self.assertEquals(len(response_dict['features']),
                               3,
+                              "The property query should have returned 3 features")
+            
+            
+            #test previous with limit results to 1
+            response = self.client.get(reverse('api_feature') + "?count=1")
+            response_dict = json.loads(response.content)
+            
+            self.assertEquals(len(response_dict['features']),
+                              1,
                               "The property query should have returned 3 features")
             
             
@@ -626,7 +650,7 @@ class FeatureTest(TestCase):
         How to difference between the two cases on the server?
         """
 
-    def test_unauthorised(self):
+    def test_unauthorized(self):
         # logout
         self.client.logout()
 

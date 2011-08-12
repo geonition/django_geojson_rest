@@ -224,6 +224,10 @@ def feature(request):
             elif(key == "id"):
                 feature_queryset = feature_queryset.filter(id__exact = value)
             
+            #opensocial request param count
+            elif(key == "count"):
+                feature_queryset = feature_queryset[:value - 1]
+                
             elif(key == "time"):
                 
                 dt = None
