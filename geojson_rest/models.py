@@ -62,8 +62,24 @@ class Feature(gis_models.Model):
     
     objects = gis_models.GeoManager()
     
+    def save(self, *args, **kwargs):
+
+        super(Feature, self).save(*args, **kwargs)
+        
+        try:
+            properties = Property.objects.filter(feature__exact=self)
+        except ObjectDoesNotExist:
+            properties = Property(feature=self, json_string='{}')
+            properties.save()
+        
+    
     def delete(self, *args, **kwargs):
         self.expire_time = datetime.datetime.today()
+
+        properties = Property.objects.filter(feature__exact=self).filter(expire_time=None)
+        for prop in properties:
+            prop.expire_time = self.expire_time
+            prop.save()
         
         super(Feature, self).save(*args, **kwargs)
         
