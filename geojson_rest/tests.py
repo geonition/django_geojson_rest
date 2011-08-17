@@ -276,6 +276,18 @@ class FeatureTest(TestCase):
                            "Limiting amount of features returned did not work, " + \
                            "count param %i but amount of features returned %i" % (limit_to_amount, returned_amount_of_features))
         
+        
+        #make sure create_time, expire_time, user_id and feature__id is included in the response
+        properties = json.loads(response.content)['features'][0]['properties']
+        self.assertTrue(properties.has_key('create_time'),
+                        "The feature response had no create_time property")
+        self.assertTrue(properties.has_key('expire_time'),
+                        "The feature response had no expire_time property")
+        self.assertTrue(properties.has_key('user_id'),
+                        "The feature response had no user_id property")
+        self.assertTrue(properties.has_key('feature_id'),
+                        "The feature response had no feature_id property")
+        
 
         
     def test_mongodb(self):

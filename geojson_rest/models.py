@@ -211,7 +211,21 @@ class Property(models.Model):
         """
         properties = json.loads(self.json_string)
         properties['user_id'] = self.feature.user.id
-        
+        properties['feature_id'] = self.feature.id
+        properties['create_time'] = "%s-%s-%s-%s-%s" % (self.create_time.year,
+                                                        self.create_time.month,
+                                                        self.create_time.day,
+                                                        self.create_time.hour,
+                                                        self.create_time.minute)
+        if self.expire_time != None:
+           properties['expire_time'] = "%s-%s-%s-%s-%s" % (self.expire_time.year,
+                                                           self.expire_time.month,
+                                                           self.expire_time.day,
+                                                           self.expire_time.hour,
+                                                           self.expire_time.minute)
+        else:
+           properties['expire_time'] = "null"
+           
         feature_dict = {"id": self.feature.id,
                         "type": "Feature",
                         "geometry": json.loads(self.feature.geometry.json),
