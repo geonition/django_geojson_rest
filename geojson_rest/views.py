@@ -12,8 +12,8 @@ from models import Property
 from geonition_utils.HttpResponseExtenders import HttpResponseUnauthorized
 from django.contrib.gis.gdal.error import OGRException
 from geonition_utils.Commons import CustomError, SoftGISFormatUtils
+from django.conf import settings
 
-import settings
 import urllib2
 import logging
 import sys
@@ -157,7 +157,7 @@ def feature(request):
         
         if not request.user.is_authenticated():
             logger.warning("There was a %s request to features but the user was not authenticated" % request.method)
-            return HttpResponseUnauthorized(_("You need to login or create a session in order to query features"))  
+            return HttpResponseUnauthorized("The request has to be made by an signed in user")  
         
         # get the definied limiting parameters
         limiting_param = request.GET.items()
