@@ -7,11 +7,12 @@ from django.contrib.auth import login as django_login
 from django.contrib.auth import authenticate as django_authenticate
 from models import Feature
 from models import Property
+from django.conf import settings
+
 import urllib
 
 
 import sys
-import settings
 import datetime
 import time
 

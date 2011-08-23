@@ -4,9 +4,9 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from geonition_utils.manager import MongoDBManager
 from pymongo import Connection
+from django.conf import settings
 
 import datetime
-import settings
 import sys
 
 if sys.version_info >= (2, 6):
