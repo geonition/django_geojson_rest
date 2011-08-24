@@ -180,7 +180,10 @@ class Property(models.Model):
     objects = models.Manager()
     
     if USE_MONGODB:
-        mongodb_collection_name = 'feature_properties'
+        mongodb_collection_name = getattr(settings,
+                                          'PROPERTIES_COLLECTION',
+                                          'feature_properties')
+        
         mongodb = MongoDBManager(collection_name = mongodb_collection_name) #manager for querying json
     
     def save(self, *args, **kwargs):    
