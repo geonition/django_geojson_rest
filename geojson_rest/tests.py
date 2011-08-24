@@ -8,6 +8,7 @@ from django.contrib.auth import authenticate as django_authenticate
 from models import Feature
 from models import Property
 from django.conf import settings
+#from django.test.utils import override_settings #supported in django 1.4
 
 import urllib
 
@@ -20,10 +21,9 @@ if sys.version_info >= (2, 6):
     import json
 else:
     import simplejson as json
-
-#change the collection name so that the production will not be polluted
-Property.mongodb_collection_name = 'test'
-        
+ 
+#this one is available in current development version, I wait until release 24.8.2011
+#@override_settings(PROPERTIES_COLLECTION='test_properties')       
 class FeatureTest(TestCase):
     """
     This class test the feature application.
@@ -36,11 +36,16 @@ class FeatureTest(TestCase):
         User.objects.create_user('testuser','', 'passwd')
         User.objects.create_user('testuser2','', 'passwd')
         
-       
+    def test_bbox_query(self):
+        """
+        This functino tests the bbox
+        query parameter
+        """
+        self.client.login(username='testuser', password='passwd')
+        
+        
+        
     def test_feature(self):
-        """
-        Black box testing for REST
-        """
         #login testuser
         self.client.login(username='testuser', password='passwd')
         
