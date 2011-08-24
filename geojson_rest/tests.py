@@ -8,6 +8,7 @@ from django.contrib.auth import authenticate as django_authenticate
 from models import Feature
 from models import Property
 from django.conf import settings
+from pymongo import Connection
 #from django.test.utils import override_settings #supported in django 1.4
 
 import urllib
@@ -35,14 +36,54 @@ class FeatureTest(TestCase):
         #setup a testuser
         User.objects.create_user('testuser','', 'passwd')
         User.objects.create_user('testuser2','', 'passwd')
+
+    def tearDown(self):
+                
+        database_host = getattr(settings, "MONGODB_HOST", 'localhost')
+        database_port = getattr(settings, "MONGODB_PORT", 27017)
+        database_name = getattr(settings, "MONGODB_DBNAME", 'geonition')
+        database_username = getattr(settings, "MONGODB_USERNAME", '')
+        database_password = getattr(settings, "MONGODB_PASSWORD", '')
+        collection_name = getattr(settings, "PROPERTIES_COLLECTION", 'test')
+        
+        connection = Connection(database_host, database_port)
+        database = connection[database_name]
+        database.authenticate(database_username, database_password)
+        database.drop_collection(collection_name)
+        
+        self.client.logout()
         
     def test_bbox_query(self):
         """
-        This functino tests the bbox
+        This function tests the bbox
         query parameter
         """
+        
         self.client.login(username='testuser', password='passwd')
         
+        geojson_feature = {"type": "Feature",
+                            "geometry": {"type":"Point",
+                                        "coordinates":[0, 200]},
+                            "properties": {"hello": "hello"}}
+        response = self.client.post(reverse('api_feature'),
+                                    json.dumps(geojson_feature),
+                                    content_type='application/json')
+        
+        geojson_feature = {"type": "Feature",
+                            "geometry": {"type":"Point",
+                                        "coordinates":[200, 0]},
+                            "properties": {"hello": "hello"}}
+        response = self.client.post(reverse('api_feature'),
+                                    json.dumps(geojson_feature),
+                                    content_type='application/json')
+        
+        #query the first one
+        response = self.client.get(reverse('api_feature') + "?bbox={'type': 'polygon', 'coordinates': [[[-10,190],[10,190],[10,210],[-10,210],[-10,190]]]}")
+        
+        res_dict = json.loads(response.content)
+        self.assertEquals(len(res_dict['features']),
+                          1,
+                          "the boundingbox query should have returned only one feature")
         
         
     def test_feature(self):
@@ -345,6 +386,7 @@ class FeatureTest(TestCase):
             #retrieve object out of scope some_prop__min=45
             response = self.client.get(reverse('api_feature') + "?some_prop__min=45")
             response_dict = json.loads(response.content)
+            
             self.assertEquals(len(response_dict['features']),
                               0,
                               "The property query should have returned 0 features")

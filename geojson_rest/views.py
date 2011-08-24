@@ -13,6 +13,7 @@ from geonition_utils.HttpResponseExtenders import HttpResponseUnauthorized
 from django.contrib.gis.gdal.error import OGRException
 from geonition_utils.Commons import CustomError, SoftGISFormatUtils
 from django.conf import settings
+from django.contrib.gis.geos import GEOSGeometry
 
 import urllib2
 import logging
@@ -230,6 +231,11 @@ def feature(request):
                     feature_queryset = feature_queryset[:value]
                 else:
                     feature_queryset = feature_queryset[:value - 1]
+            
+            #bbox
+            elif(key == "bbox"):
+                geos = GEOSGeometry(value)
+                feature_queryset = feature_queryset.filter(geometry__within=geos)
                 
             elif(key == "time"):
                 
@@ -271,7 +277,6 @@ def feature(request):
                         mongo_query[key]["$lte"] = value
                         
                 elif command == "min":
-
                     if mongo_query.has_key(key):
                         mongo_query[key]["$gte"] = value
                     else:
