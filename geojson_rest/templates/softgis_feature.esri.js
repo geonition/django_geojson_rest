@@ -350,7 +350,7 @@ function complement(featurecollection1, featurecollection2) {
     
     for(var i = 0; i < featurecollection.features.length; i++) {
 	for(var j = 0; j < featurecollection2.features.length; j++) {
-	    console.log(featurecollection.features[i].id);
+	    
 	    if(featurecollection.features[i].id === featurecollection2.features[j].id) {
 		featurecollection.features.splice(i, 1);
 		i--;
