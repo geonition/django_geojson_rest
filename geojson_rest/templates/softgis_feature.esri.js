@@ -290,3 +290,73 @@ function get_graphics(limiter_param, map_layer, infotemplate, callback_function)
         }
     });
 }
+
+
+/*
+ UNION function that returns the union of the two featurecollections
+ according to the id of the features.
+ 
+ Make sure all features have an id assigned to them before using this
+ function. This function will throw an error if no id is found.
+*/
+function union(featurecollection1, featurecollection2) {
+    var featurecollection = featurecollection1;
+    
+    var ids = {}; //set of ids in the union
+    for(var i = 0; i < featurecollection.features.length; i++) {
+	ids[featurecollection.features[i].id] = true;
+    }
+    for(var j = 0; j < featurecollection2.features.length; j++) {
+	var feat = featurecollection2.features[j];
+	if(ids[feat.id] === undefined) {
+	    featurecollection.features.push(feat);
+	}
+    }
+    return featurecollection;
+}
+
+/*
+ INTERSECT function that returns the intersect of two featurecollections
+ according to their assigned id.
+ 
+ If no id is signed to a feature it will throw an error.
+*/
+function intersect(featurecollection1, featurecollection2) {
+    var featurecollection = {
+	"type": "FeatureCollection",
+	"features": []
+	};
+    
+    for(var i = 0; i < featurecollection1.features.length; i++) {
+	for(var j = 0; j < featurecollection2.features.length; j++) {
+	    if(featurecollection1.features[i].id === featurecollection2.features[j].id) {
+		featurecollection.features.push(featurecollection1.features[i]);
+		break;
+	    }
+	}
+    }
+    return featurecollection;
+}
+
+/*
+ COMPLEMENT function that returns a new featurecollection with features
+ that can be found in featurecollection1 but not in featurecollection2.
+ 
+ Based on feature id, if id does not exist in a feature this function
+ throws an error
+*/
+function complement(featurecollection1, featurecollection2) {
+    var featurecollection = featurecollection1;
+    
+    for(var i = 0; i < featurecollection.features.length; i++) {
+	for(var j = 0; j < featurecollection2.features.length; j++) {
+	    console.log(featurecollection.features[i].id);
+	    if(featurecollection.features[i].id === featurecollection2.features[j].id) {
+		featurecollection.features.splice(i, 1);
+		i--;
+		break;
+	    }
+	}
+    }
+    return featurecollection;
+}
