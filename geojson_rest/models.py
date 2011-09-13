@@ -184,7 +184,7 @@ class Property(models.Model):
                                           'PROPERTIES_COLLECTION',
                                           'feature_properties')
         
-        mongodb = MongoDBManager(collection_name = mongodb_collection_name) #manager for querying json
+        mongodb = MongoDBManager() #manager for querying json
     
     def save(self, *args, **kwargs):    
         #save this new property
