@@ -46,10 +46,10 @@ class FeatureTest(TestCase):
         database_password = getattr(settings, "MONGODB_PASSWORD", '')
         collection_name = getattr(settings, "PROPERTIES_COLLECTION", 'test')
         
-        connection = Connection(database_host, database_port)
-        database = connection[database_name]
-        database.authenticate(database_username, database_password)
-        database.drop_collection(collection_name)
+        #connection = Connection(database_host, database_port)
+        #database = connection[database_name]
+        #database.authenticate(database_username, database_password)
+        #database.drop_collection(collection_name)
         
         self.client.logout()
         
@@ -386,7 +386,7 @@ class FeatureTest(TestCase):
             #retrieve object out of scope some_prop__min=45
             response = self.client.get(reverse('api_feature') + "?some_prop__min=45")
             response_dict = json.loads(response.content)
-            
+
             self.assertEquals(len(response_dict['features']),
                               0,
                               "The property query should have returned 0 features")
