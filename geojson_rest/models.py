@@ -53,8 +53,7 @@ class Feature(gis_models.Model):
     >>> type(f_temp.expire_time)
     <type 'datetime.datetime'>
     """
-    geometry = gis_models\
-                .GeometryField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
+    geometry = gis_models.GeometryField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
     user = models.ForeignKey(User)
     
     create_time = models.DateTimeField(auto_now_add=True, null=True)
