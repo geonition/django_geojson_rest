@@ -210,7 +210,11 @@ map_layer - the map layer where the graphics are added
 infotemplate - an ESRI infotemplate object for the graphic
 
 */
-function get_graphics(limiter_param, map_layer, infotemplate, callback_function) {
+function get_graphics(limiter_param,
+		      map_layer,
+		      infotemplate,
+		      callback_function) {
+    
     console.log("DEPRACATED get_graphics");
     
     if(limiter_param === undefined ||
