@@ -131,7 +131,10 @@ def feature(request):
             geos = OGRGeometry(json.dumps(geometry)).geos
         except OGRException, ogrException:            
             logger.warning("The submited geometry is invalid: %s " % ogrException)
-            raise CustomError("The submited geometry is invalid: %s " % ogrException, 400, str(ogrException))
+            raise CustomError("The submited geometry is "
+                              "invalid: %s " % (ogrException,
+                                                400,
+                                                str(ogrException)))
         except GEOSException, geosEx:
             logger.warning("Error encountered checking Geometry: %s " % geosEx)
             raise geosEx    
@@ -157,8 +160,11 @@ def feature(request):
     if request.method  == "GET":
         
         if not request.user.is_authenticated():
-            logger.warning("There was a %s request to features but the user was not authenticated" % request.method)
-            return HttpResponseUnauthorized("The request has to be made by an signed in user")  
+            logger.warning("There was a %s request to "
+                           "features but the user was not "
+                           "authenticated" % request.method)
+            return HttpResponseUnauthorized("The request has to be "
+                                            "made by an signed in user")  
         
         # get the definied limiting parameters
         limiting_param = request.GET.items()
@@ -178,7 +184,9 @@ def feature(request):
         else:
             feature_queryset = Feature.objects.none()
 
-        logger.debug("GET request to features() from user %s and with params %s" % (request.user.username, limiting_param))
+        logger.debug("GET request to features() from user %s and "
+                     "with params %s" % (request.user.username,
+                                         limiting_param))
 
         property_queryset = Property.objects.all()
         mongo_query = {}
@@ -203,7 +211,6 @@ def feature(request):
                     message = 'JSON decode error: %s' % unicode(exc)
                     logger.warning(message)
                     return HttpResponseBadRequest(message)
-                continue
 
             if value.isnumeric():
                 value = int(value)
@@ -292,7 +299,7 @@ def feature(request):
             mongo_query['_id'] = {"$in": list(property_queryset.values_list('id', flat=True))}
             qs = Property.mongodb.find(mongo_query)
             property_queryset = property_queryset.filter(id__in = qs.values_list('id', flat=True))
-        
+            
         #filter the properties not belonging to feature_queryset
         property_queryset = property_queryset.filter(feature__in = feature_queryset)
         
@@ -335,8 +342,10 @@ def feature(request):
                         except KeyError:
                             csv_string += ""
             else:
-                logger.warning("The format requested %s is not supported" % format)
-                return HttpResponseBadRequest(_("Data output format is not supported"))
+                logger.warning("The format requested %s is "
+                               "not supported" % format)
+                return HttpResponseBadRequest("Data output format is "
+                                              "not supported")
 
         # According to GeoJSON specification crs member
         # should be on the top-level GeoJSON object
@@ -361,14 +370,19 @@ def feature(request):
         elif format == "csv":
             return HttpResponse(csv_string, mimetype="text/csv")
         else:
-            return HttpResponseBadRequest(_("Data output format is not supported"))
+            return HttpResponseBadRequest("Data output format "
+                                          "is not supported")
 
 
     elif request.method == "POST":
         
         if not request.user.is_authenticated():
-            logger.warning("There was a %s request to features but the user was not authenticated" % request.method)
-            return HttpResponseUnauthorized(_("You need to login or create a session in order to create features"))    
+            logger.warning("There was a %s request to features "
+                           "but the user was not "
+                           "authenticated" % request.method)
+            return HttpResponseUnauthorized("You need to login or "
+                                            "create a session in order "
+                                            "to create features")    
 
         #supports saving geojson Features
         feature_json = None
@@ -377,7 +391,8 @@ def feature(request):
             logger.debug("POST request to features() with params %s " % request.POST.keys()[0])
             feature_json = json.loads(request.POST.keys()[0])
         except IndexError:
-            return HttpResponseBadRequest(_("POST data was empty so could not create the feature"))
+            return HttpResponseBadRequest(_("POST data was empty so "
+                                            "could not create the feature"))
         except ValueError, exc:
             message = 'JSON decode error: %s' % unicode(exc)
             logger.warning(message)
@@ -407,9 +422,11 @@ def feature(request):
                                         "requires properties "  + \
                                         "and geometry")
             except OGRException, ogrException:
-                return HttpResponseBadRequest("The submited geometry is invalid")
+                return HttpResponseBadRequest("The submited geometry is "
+                                              "invalid")
             except GEOSException, geosEx:
-                return HttpResponseBadRequest("Error encountered checking Geometry")
+                return HttpResponseBadRequest("Error encountered checking "
+                                              "Geometry")
                 
 
             return HttpResponse(json.dumps(feature_json))         
@@ -431,9 +448,11 @@ def feature(request):
                                             "requires properties "  + \
                                             "and geometry")
                 except OGRException, ogrException:
-                    return HttpResponseBadRequest("The submited geometry is invalid: %s" % ogrException)
+                    return HttpResponseBadRequest("The submited geometry "
+                                                  "is invalid: %s" % ogrException)
                 except GEOSException, geosEx:
-                    return HttpResponseBadRequest("Error encountered checking Geometry")
+                    return HttpResponseBadRequest("Error encountered "
+                                                  "checking Geometry")
                 
             ret_featurecollection['features'].append(feat)
 
@@ -444,7 +463,9 @@ def feature(request):
     elif request.method == "PUT":
         
         if not request.user.is_authenticated():
-            return HttpResponseUnauthorized(_("You need to login or create a session in order to update features"))    
+            return HttpResponseUnauthorized("You need to login or "
+                                            "create a session in order "
+                                            "to update features")    
         
         try:
             #supports updating geojson Features
@@ -455,7 +476,8 @@ def feature(request):
             return HttpResponseBadRequest(message)
 
         
-        logger.debug("A PUT request was sent to features with params %s" % feature_json)
+        logger.debug("A PUT request was sent to features with "
+                     "params %s" % feature_json)
 
         try:
             geojson_type = feature_json['type']
@@ -474,13 +496,16 @@ def feature(request):
                                         "geometry " + \
                                         "and id for updating")
             except GEOSException, geosEx:
-                return HttpResponseBadRequest("Error encountered checking Geometry")    
+                return HttpResponseBadRequest("Error encountered "
+                                              "checking Geometry")    
             except CustomError, err:
-                return HttpResponse(content = err.customMessage, status = err.statusCode)
+                return HttpResponse(content = err.customMessage,
+                                    status = err.statusCode)
                 
                 
             
-            return HttpResponse(_(u"Feature with id %s was updated" % feature_id))
+            return HttpResponse(_(u"Feature with id %s "
+                                  "was updated" % feature_id))
     
         elif geojson_type == "FeatureCollection":
                 
@@ -495,9 +520,11 @@ def feature(request):
                                             "geometry " + \
                                             "and id for updating")
                 except GEOSException, geosEx:
-                    return HttpResponseBadRequest("Error encountered checking Geometry")    
+                    return HttpResponseBadRequest("Error encountered "
+                                                  "checking Geometry")    
                 except CustomError, err:
-                    return HttpResponse(content = err.customMessage, status = err.statusCode)
+                    return HttpResponse(content = err.customMessage,
+                                        status = err.statusCode)
 
             
             return HttpResponse(_(u"Features updated"))
@@ -507,7 +534,9 @@ def feature(request):
         Get the array with the feature ids for delete
         """
         if not request.user.is_authenticated():
-            return HttpResponseUnauthorized(_("You need to login or create a session in order to delete features"))
+            return HttpResponseUnauthorized("You need to login or "
+                                            "create a session in order "
+                                            "to delete features")
             
         try:
             feature_ids = json.loads(request.GET.get("ids","[]"))
@@ -516,11 +545,13 @@ def feature(request):
             logger.warning(message)
             return HttpResponseBadRequest(message)
         
-        logger.debug("A DELETE request was sent to features with the params %s" % feature_ids)
+        logger.debug("A DELETE request was sent to features with the "
+                     "params %s" % feature_ids)
 
         if len(feature_ids) == 0:
             logger.warning("No feature id was provided to be deleted")
-            return HttpResponseNotFound(_(u"You have to provide id of features to delete."))
+            return HttpResponseNotFound(u"You have to provide id of "
+                                        "features to delete.")
 
         feature_queryset = Feature.objects.filter(id__in = feature_ids,
                                                 user__exact = request.user)
@@ -536,16 +567,21 @@ def feature(request):
                 deleted_features.append(feat.id)
                 
         """
-        Test if there were features already deleted (with an expiration time already set)
-        and return not found
+        Test if there were features already deleted (with an expiration
+        time already set) and return not found
         """
         not_deleted = [id for id in feature_ids if id not in deleted_features]
         if len(not_deleted) > 0:
             logger.warning("Delete result: Features %s not found and featured %s deleted" % (not_deleted, deleted_features))
-            return HttpResponseNotFound(_(u"Features %(not_deleted)s not found and featured %(deleted_features)s deleted." % {'not_deleted' : not_deleted, 'deleted_features' : deleted_features}))
+            return HttpResponseNotFound(u"Features %(not_deleted)s not "
+                                        "found and featured "
+                                        "%(deleted_features)s "
+                                        "deleted." % {'not_deleted': not_deleted,
+                                                      'deleted_features': deleted_features})
         
         logger.info("All Features were deleted successfully")
-        return HttpResponse(_(u"Features with ids %s deleted." % deleted_features))
+        return HttpResponse(_(u"Features with ids "
+                              "%s deleted." % deleted_features))
 
 
 
