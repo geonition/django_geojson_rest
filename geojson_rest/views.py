@@ -296,9 +296,11 @@ def feature(request):
                 
         #filter the queries acccording to the json
         if len(mongo_query) > 0:
-            mongo_query['_id'] = {"$in": list(property_queryset.values_list('id', flat=True))}
+            mongo_query['_id'] = {"$in": list(property_queryset.values_list('id',
+                                                                            flat=True))}
             qs = Property.mongodb.find(mongo_query)
-            property_queryset = property_queryset.filter(id__in = qs.values_list('id', flat=True))
+            property_queryset = property_queryset.filter(id__in = qs.values_list('id',
+                                                                                 flat=True))
             
         #filter the properties not belonging to feature_queryset
         property_queryset = property_queryset.filter(feature__in = feature_queryset)
