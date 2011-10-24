@@ -1,7 +1,3 @@
-from django.http import HttpResponse
-from django.http import HttpResponseForbidden
-from django.http import HttpResponseBadRequest
-from django.http import HttpResponseNotFound
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import translation
 from django.utils.encoding import smart_unicode
@@ -10,6 +6,10 @@ from django.contrib.gis.geos.error import GEOSException
 from models import Feature
 from models import Property
 from geonition_utils.HttpResponseExtenders import HttpResponseUnauthorized
+from geonition_utils.HttpResponseExtenders import HttpResponse
+from geonition_utils.HttpResponseExtenders import HttpResponseForbidden
+from geonition_utils.HttpResponseExtenders import HttpResponseBadRequest
+from geonition_utils.HttpResponseExtenders import HttpResponseNotFound
 from django.contrib.gis.gdal.error import OGRException
 from geonition_utils.Commons import CustomError, SoftGISFormatUtils
 from django.conf import settings
@@ -367,10 +367,9 @@ def feature(request):
         logger.debug("Returned feature collection %s" % feature_collection)  
 
         if format == "geojson":
-            return HttpResponse(json.dumps(feature_collection),
-                                mimetype="application/json")
+            return HttpResponse(json.dumps(feature_collection))
         elif format == "csv":
-            return HttpResponse(csv_string, mimetype="text/csv")
+            return HttpResponse(csv_string)
         else:
             return HttpResponseBadRequest("Data output format "
                                           "is not supported")
