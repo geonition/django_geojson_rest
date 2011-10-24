@@ -749,63 +749,6 @@ class FeatureTest(TestCase):
                          "Can not add features if not signed in or an anonymous session is created")
 
 
-    def test_csv_export(self):
-        self.client.login(username='testuser', password='passwd')
-        userid = str(self.client.session.get('_auth_user_id'))
-        
-        #add a feature collection for that anonymous user
-        featurecollection = {
-            "type": "FeatureCollection",
-            "features": []
-        }
-        featurecollection['features'].append(
-            {"type": "Feature",
-            "geometry": {"type":"Point",
-                        "coordinates":[200, 200]},
-            "properties": {"some_prop":"value;anyting;", "Gender" : "Male", "Age" : "20"}})
-        featurecollection['features'].append(
-            {"type": "Feature",
-            "geometry": {"type":"Point",
-                        "coordinates":[300, 250]},
-            "properties": {"some_prop": 40, "Gender" : "Female", "Age" : "21"}})
-        featurecollection['features'].append(
-            {"type": "Feature",
-            "geometry": {"type":"Point",
-                        "coordinates":[100, 300]},
-            "properties": {"some_prop": True , "Gender" : "Male", "Age" : "25"}})
-        featurecollection['features'].append(
-            {"type": "Feature",
-            "geometry": {"type":"Point",
-                        "coordinates":[100, 300]},
-            "properties": {"some_prop": None, "Gender" : "Male", "Age" : "28", "user_id": 2}})
-        
-
-        response = self.client.post(reverse('api_feature'),
-                                    urllib.quote_plus(json.dumps(featurecollection)),
-                                    content_type='application/json')
-        
-        self.assertEquals(response.status_code,
-                          200,
-                          "Feaurecollection POST was not valid")
-
-        response = self.client.get(reverse('api_feature') + "?format=csv&csv_header=[\"user_id\",\"Geometry_WKT\",\"some_prop\",\"Gender\",\"Age\"]" )
-        self.assertEqual(response.content,
-                        "user_id;Geometry_WKT;some_prop;Gender;Age\n" + \
-                        userid + ";POINT (200.0000000000000000 200.0000000000000000);value anyting ;Male;20\n" + \
-                        userid + ";POINT (300.0000000000000000 250.0000000000000000);40;Female;21\n" + \
-                        userid + ";POINT (100.0000000000000000 300.0000000000000000);True;Male;25\n" + \
-                        userid + ";POINT (100.0000000000000000 300.0000000000000000);None;Male;28",
-                        "The CSV export is not ok")
-        
-        response = self.client.get(reverse('api_feature') + "?format=csv&csv_header=[\"user_id\",\"Geometry_geojson\",\"some_prop\",\"Gender\",\"Age\"]" )
-        self.assertEqual(response.content,
-                        "user_id;Geometry_geojson;some_prop;Gender;Age\n" + \
-                        userid + ";{ \"type\": \"Point\", \"coordinates\": [ 200.000000, 200.000000 ] };value anyting ;Male;20\n" + \
-                        userid + ";{ \"type\": \"Point\", \"coordinates\": [ 300.000000, 250.000000 ] };40;Female;21\n" + \
-                        userid + ";{ \"type\": \"Point\", \"coordinates\": [ 100.000000, 300.000000 ] };True;Male;25\n" + \
-                        userid + ";{ \"type\": \"Point\", \"coordinates\": [ 100.000000, 300.000000 ] };None;Male;28",
-                        "The export is not ok for Geometry_geojson format")
-
     def test_GeoException(self):
         self.client.login(username='testuser', password='passwd')
 
