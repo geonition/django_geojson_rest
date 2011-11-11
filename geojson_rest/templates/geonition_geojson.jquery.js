@@ -1,8 +1,11 @@
+/*
+ javascript functions for the geojson_rest app
+*/
+gnt.app_version['geojson_rest'] = '2.0.0';
 gnt['geo'] = {};
 
 /*
-
-get_features retrieves features according to the limiting params
+gnt.geo.get_features retrieves features according to the limiting params
 
 the limit_params is a GET string starting with a "?"
 
