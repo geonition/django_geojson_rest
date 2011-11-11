@@ -45,7 +45,7 @@ function(limit_params, callback_function) {
  collection to the database
 */
 gnt.geo['create_feature'] =
-function(feature_or_featurecollection, callback_function) {
+function(feature_or_feature_collection, callback_function) {
     $.ajax({
         url: "{% url api_feature %}",
         type: "POST",
