@@ -101,7 +101,7 @@ function(feature_or_feature_collection, callback_function) {
  delete_feature, deletes the feature(s) with the given feature_id(s)
 */
 gnt.geo['delete_feature'] =
-function(feature_or_featurecollection, callback_function) {
+function(feature_or_feature_collection, callback_function) {
     /*
     ensure the backwords compatibility
     New logic expects an array of ids
