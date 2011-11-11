@@ -49,7 +49,7 @@ function(feature_or_feature_collection, callback_function) {
     $.ajax({
         url: "{% url api_feature %}",
         type: "POST",
-        data: JSON.stringify(feature_or_featurecollection),
+        data: JSON.stringify(feature_or_feature_collection),
         contentType: "application/json",
         success: function(data) {
             if(callback_function !== undefined) {
