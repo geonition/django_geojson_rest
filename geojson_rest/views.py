@@ -54,14 +54,8 @@ def feature(request):
         geometry = None
         properties = None
         
-        try:
-            geometry = feature_json['geometry']
-            properties = feature_json['properties']
-        except KeyError, keyError:
-            logger.warning("The geojson type Feature does not include the required properties and geometry")	
-            raise keyError            
-
-        
+        geometry = feature_json['geometry']
+        properties = feature_json['properties']
         
         #geos = GEOSGeometry(json.dumps(geometry))
         # Have to make OGRGeometry as GEOSGeometry
@@ -101,13 +95,9 @@ def feature(request):
         properties = None
         feature_id = None
         
-        try:
-            geometry = feature_json['geometry']
-            properties = feature_json['properties']
-            feature_id = feature_json['id']
-        except KeyError, keyError:
-            logger.debug("The geojson type Feature does not include the required properties, geometry and id for updating")	
-            raise keyError
+        geometry = feature_json['geometry']
+        properties = feature_json['properties']
+        feature_id = feature_json['id']
          
         #get the feature to be updated
         feature_old = None
@@ -491,7 +481,7 @@ def feature(request):
         if geojson_type == "Feature":
             try:
                 feature_id = update_feature(feature_json)
-            except keyError:
+            except KeyError:
                 return HttpResponseBadRequest("geojson feature requires " + \
                                         "properties, "  + \
                                         "geometry " + \
@@ -515,7 +505,7 @@ def feature(request):
             for feat in features:  
                 try:
                     feature_id = update_feature(feat)
-                except keyError:
+                except KeyError:
                     return HttpResponseBadRequest("geojson feature requires " + \
                                             "properties, "  + \
                                             "geometry " + \
