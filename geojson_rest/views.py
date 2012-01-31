@@ -388,6 +388,7 @@ def feature(request):
         #supports saving geojson Features
         feature_json = None
         
+        
         try:
             logger.debug("POST request to features() with params %s " % request.POST.keys()[0])
             feature_json = json.loads(request.POST.keys()[0])
