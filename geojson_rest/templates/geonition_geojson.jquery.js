@@ -21,7 +21,7 @@ function(limit_params, callback_function) {
     if(limit_params == undefined) {
         limit_params = "";
     }
-    
+
     $.ajax({
         url: "{% url api_feature %}" + limit_params,
         type: "GET",
@@ -113,7 +113,7 @@ function(feature_or_feature_collection, callback_function) {
     var feature_ids_array = [];
     var type = feature_or_feature_collection.type;
     var i = 0;
-    
+
     if (type === "Feature"){
         feature_ids_array[0] = feature_or_feature_collection.id;
     }
@@ -124,7 +124,7 @@ function(feature_or_feature_collection, callback_function) {
             }
         }
     }
-    
+
     $.ajax({
         url: "{% url api_feature %}?ids=" + JSON.stringify(feature_ids_array),
         type: "DELETE",
@@ -141,7 +141,7 @@ function(feature_or_feature_collection, callback_function) {
         dataType: "json",
         beforeSend: function(xhr) {
             xhr.withCredentials = true;
-        }    
+        }
     });
 };
 
