@@ -35,36 +35,36 @@ SEPARATOR = getattr(settings, "SEPARATOR_FOR_CSV_FILE", ";")
 def feature(request):
     """
     This function handles the feature part of the softgis REST api
-    
+
     On GET request this function returns a geojson featurecollection
     matching the query string.
-    
+
     On POST request this function adds a new feature to the database.
-    
+
     On PUT request this function will update a feature that has
     a given id.
-    
-    On DELETE request this function removes existing feature/feature collection from 
+
+    On DELETE request this function removes existing feature/feature collection from
     the database.
     """
-    
-    
-  
+
+
+
     def save_feature(feature_json):
         geometry = None
         properties = None
-        
+
         geometry = feature_json['geometry']
         properties = feature_json['properties']
-        
+
         #geos = GEOSGeometry(json.dumps(geometry))
         # Have to make OGRGeometry as GEOSGeometry
         # does not support spatial reference systems
         try:
-            
+
             geos = OGRGeometry(json.dumps(geometry)).geos
-        except OGRException, ogrException:            
-            logger.warning("The submited geometry is invalid: %s " % ogrException)	
+        except OGRException, ogrException:
+            logger.warning("The submited geometry is invalid: %s " % ogrException)
             raise ogrException
         except GEOSException, geosEx:
             logger.warning("Error encountered checking Geometry: %s " % geosEx)
@@ -74,14 +74,14 @@ def feature(request):
         new_feature = Feature(geometry=geos,
                             user=request.user)
         new_feature.save()
-        
+
 
         #add the id to the feature json
         identifier = new_feature.id
         logger.info("The feature was successfully saved with id %i" %identifier)
 
         feature_json['id'] = identifier
-        
+
         #save the properties of the new feature
         new_property = Property(feature=new_feature,
                                 json_string=json.dumps(properties))
@@ -94,11 +94,11 @@ def feature(request):
         geometry = None
         properties = None
         feature_id = None
-        
+
         geometry = feature_json['geometry']
         properties = feature_json['properties']
         feature_id = feature_json['id']
-         
+
         #get the feature to be updated
         feature_old = None
         try:
@@ -106,20 +106,20 @@ def feature(request):
         except DoesNotExist, doesNotExist:
             logger.debug("The Feature with id %i was not found" % feature_id)
             raise CustomError("The feature with id %i was not found. Details %s" % (feature_id, str(doesNotExist)), 400, str(doesNotExist))
-            
-        
+
+
         if feature_old.user != request.user:
             logger.debug("The Feature with id %i was not found was added by user %s and it can not be modified by current user %s" %(feature_id, feature_old.user.username, request.user.username))
             raise CustomError( "You do not have permission to update feature %i" % feature_id, 403)
-        
-        
+
+
         #geos = GEOSGeometry(json.dumps(geometry))
         # Have to make OGRGeometry as GEOSGeometry
         # does not support spatial reference systems
         try:
-            
+
             geos = OGRGeometry(json.dumps(geometry)).geos
-        except OGRException, ogrException:            
+        except OGRException, ogrException:
             logger.warning("The submited geometry is invalid: %s " % ogrException)
             raise CustomError("The submited geometry is "
                               "invalid: %s " % (ogrException,
@@ -127,16 +127,16 @@ def feature(request):
                                                 str(ogrException)))
         except GEOSException, geosEx:
             logger.warning("Error encountered checking Geometry: %s " % geosEx)
-            raise geosEx    
-        
+            raise geosEx
+
         feature = feature_old.update(geometry = geos)
-        logger.info("The Feature %i was updated successfully" % feature_id)            
+        logger.info("The Feature %i was updated successfully" % feature_id)
 
         #save the properties of the new feature
         cur_property = Property.objects\
                         .filter(feature = feature_old)\
                         .latest('create_time')
-        
+
         if feature_old.id == feature.id: #if there was nothing updated
             new_property = cur_property.update(json.dumps(properties))
         else: #feature was updated so new property created
@@ -144,23 +144,23 @@ def feature(request):
             new_property = Property(feature=feature,
                                 json_string=json.dumps(properties))
             new_property.save()
-        
-        return feature_id        
+
+        return feature_id
 
     if request.method  == "GET":
-        
+
         if not request.user.is_authenticated():
             logger.warning("There was a %s request to "
                            "features but the user was not "
                            "authenticated" % request.method)
             return HttpResponseUnauthorized("The request has to be "
-                                            "made by an signed in user")  
-        
+                                            "made by an signed in user")
+
         # get the definied limiting parameters
         limiting_param = request.GET.items()
-        
+
         feature_collection = {"type":"FeatureCollection", "features": []}
-        
+
         feature_queryset = None
 
         #filter according to permissions
@@ -186,7 +186,7 @@ def feature(request):
 
         #filter according to limiting_params
         for key, value in limiting_param:
-            
+
             key = str(key)
 
             # get the export format
@@ -208,63 +208,63 @@ def feature(request):
                 value = True
             elif value == "false":
                 value = False
-                
+
             key_split = key.split('__')
             command = ""
-            
+
             if len(key_split) > 1:
                 key = key_split[0]
                 command = key_split[1]
-            
+
             if(key == "user_id"):
                 feature_queryset = feature_queryset.filter(user__exact = value)
-                
+
             elif(key == "id"):
                 feature_queryset = feature_queryset.filter(id__exact = value)
-            
+
             #opensocial request param count
             elif(key == "count"):
                 if value == 1:
                     feature_queryset = feature_queryset[:value]
                 else:
                     feature_queryset = feature_queryset[:value - 1]
-            
+
             #bbox
             elif(key == "bbox"):
                 geos = GEOSGeometry(value)
                 feature_queryset = feature_queryset.filter(geometry__within=geos)
-                
+
             elif(key == "time"):
-                
+
                 dt = None
-                 
+
                 if(command == "now" and value):
                     dt = datetime.datetime.now()
                 elif(command == "now" and not value):
                     continue
                 else:
                     dt = SoftGISFormatUtils.parse_time(value)
-                
+
                 property_qs_expired = property_queryset.filter(create_time__lte = dt)
                 property_qs_expired = property_qs_expired.filter(expire_time__gte = dt)
-                    
+
                 property_qs_not_exp = property_queryset.filter(create_time__lte = dt)
                 property_qs_not_exp = property_qs_not_exp.filter(expire_time = None)
                 property_qs_not_exp = property_qs_not_exp.exclude(id__in = property_qs_expired)
-                    
+
                 property_queryset = property_qs_not_exp | property_qs_expired
-                    
+
                 #do the same for features
                 feature_ids = property_queryset.values_list('feature_id', )
                 feature_queryset = feature_queryset.filter(id__in = feature_ids)
                 feature_qs_expired = feature_queryset.filter(expire_time__gt = dt)
                 feature_qs_expired = feature_qs_expired.filter(create_time__lt = dt)
                 feature_qs_not_expired = feature_queryset.filter(expire_time = None)
-                feature_queryset = feature_qs_not_expired | feature_qs_expired 
-                
+                feature_queryset = feature_qs_not_expired | feature_qs_expired
+
             #mongodb queries should be built here
             elif USE_MONGODB:
-                
+
                 if command == "max":
 
                     if mongo_query.has_key(key):
@@ -272,7 +272,7 @@ def feature(request):
                     else:
                         mongo_query[key] = {}
                         mongo_query[key]["$lte"] = value
-                        
+
                 elif command == "min":
                     if mongo_query.has_key(key):
                         mongo_query[key]["$gte"] = value
@@ -282,8 +282,8 @@ def feature(request):
 
                 elif command == "":
                     mongo_query[key] = value
-        
-                
+
+
         #filter the queries acccording to the json
         if len(mongo_query) > 0:
             mongo_query['_id'] = {"$in": list(property_queryset.values_list('id',
@@ -291,10 +291,10 @@ def feature(request):
             qs = Property.mongodb.find(mongo_query)
             property_queryset = property_queryset.filter(id__in = qs.values_list('id',
                                                                                  flat=True))
-            
+
         #filter the properties not belonging to feature_queryset
         property_queryset = property_queryset.filter(feature__in = feature_queryset)
-        
+
         #if output format is csv prepare the file header
         csv_string = ""
 
@@ -303,7 +303,7 @@ def feature(request):
                 #check index and put separator
                 if i > 0:
                     csv_string += SEPARATOR
-                csv_string += key 
+                csv_string += key
 
 
         for prop in property_queryset:
@@ -348,13 +348,13 @@ def feature(request):
             srid = getattr(settings, "SPATIAL_REFERENCE_SYSTEM_ID", 4326)
 
         crs_object =  {"type": "EPSG", "properties": {"code": srid}}
-        
+
         # If the coordinate system is wgs84(4326) don't include 'crs'
         # see geojson specifications
         if srid != 4326 :
             feature_collection['crs'] = crs_object
-        
-        logger.debug("Returned feature collection %s" % feature_collection)  
+
+        logger.debug("Returned feature collection %s" % feature_collection)
 
         if format == "geojson":
             return HttpResponse(json.dumps(feature_collection))
@@ -366,18 +366,18 @@ def feature(request):
 
 
     elif request.method == "POST":
-        
+
         if not request.user.is_authenticated():
             logger.warning("There was a %s request to features "
                            "but the user was not "
                            "authenticated" % request.method)
             return HttpResponseUnauthorized("You need to login or "
                                             "create a session in order "
-                                            "to create features")    
+                                            "to create features")
 
         #supports saving geojson Features
         feature_json = None
-        
+
         try:
             logger.debug("POST request to features() with params %s " % request.POST.keys()[0])
             feature_json = json.loads(request.POST.keys()[0])
@@ -388,23 +388,23 @@ def feature(request):
             message = 'JSON decode error: %s' % unicode(exc)
             logger.warning(message)
             return HttpResponseBadRequest(message)
-            
-            
+
+
         geojson_type = None
-        
+
         try:
             geojson_type = feature_json['type']
         except KeyError:
-            logger.warning("The geojson does not include a type")	
+            logger.warning("The geojson does not include a type")
             return HttpResponseBadRequest(_("geojson did not inclue a type." + \
                                           " Accepted types are " + \
                                           "'FeatureCollection' and 'Feature'."))
-            
+
 
 
         #inner function to save one feature
         if geojson_type == "Feature":
-            
+
             try:
                 identifier = save_feature(feature_json)
                 feature_json['id'] = identifier
@@ -418,9 +418,9 @@ def feature(request):
             except GEOSException, geosEx:
                 return HttpResponseBadRequest("Error encountered checking "
                                               "Geometry")
-                
 
-            return HttpResponse(json.dumps(feature_json))         
+
+            return HttpResponse(json.dumps(feature_json))
 
         elif geojson_type == "FeatureCollection":
             features = feature_json['features']
@@ -428,7 +428,7 @@ def feature(request):
                 "type": "FeatureCollection",
                 "features": []
             }
-            
+
             for feat in features:
 
                 try:
@@ -444,31 +444,20 @@ def feature(request):
                 except GEOSException, geosEx:
                     return HttpResponseBadRequest("Error encountered "
                                                   "checking Geometry")
-                
+
             ret_featurecollection['features'].append(feat)
 
             logger.info("The feature collection was successfuly saved")
 
             return HttpResponse(json.dumps(ret_featurecollection))
-            
+
     elif request.method == "PUT":
-        
         if not request.user.is_authenticated():
             return HttpResponseUnauthorized("You need to login or "
                                             "create a session in order "
-                                            "to update features")    
-        
-        try:
-            #supports updating geojson Features
-            feature_json = json.loads(urllib2.unquote(request.raw_post_data.encode('utf-8')).decode('utf-8'))
-        except ValueError, exc:
-            message = 'JSON decode error: %s' % unicode(exc)
-            logger.warning(message)
-            return HttpResponseBadRequest(message)
+                                            "to update features")
 
-        
-        logger.debug("A PUT request was sent to features with "
-                     "params %s" % feature_json)
+        feature_json = json.loads(urllib2.unquote(request.raw_post_data))
 
         try:
             geojson_type = feature_json['type']
@@ -488,21 +477,21 @@ def feature(request):
                                         "and id for updating")
             except GEOSException, geosEx:
                 return HttpResponseBadRequest("Error encountered "
-                                              "checking Geometry")    
+                                              "checking Geometry")
             except CustomError, err:
                 return HttpResponse(content = err.customMessage,
                                     status = err.statusCode)
-                
-                
-            
+
+
+
             return HttpResponse(_(u"Feature with id %s "
                                   "was updated" % feature_id))
-    
+
         elif geojson_type == "FeatureCollection":
-                
+
             features = feature_json['features']
-            
-            for feat in features:  
+
+            for feat in features:
                 try:
                     feature_id = update_feature(feat)
                 except KeyError:
@@ -512,14 +501,14 @@ def feature(request):
                                             "and id for updating")
                 except GEOSException, geosEx:
                     return HttpResponseBadRequest("Error encountered "
-                                                  "checking Geometry")    
+                                                  "checking Geometry")
                 except CustomError, err:
                     return HttpResponse(content = err.customMessage,
                                         status = err.statusCode)
 
-            
+
             return HttpResponse(_(u"Features updated"))
-                    
+
     elif request.method  == "DELETE":
         """
         Get the array with the feature ids for delete
@@ -528,14 +517,14 @@ def feature(request):
             return HttpResponseUnauthorized("You need to login or "
                                             "create a session in order "
                                             "to delete features")
-            
+
         try:
             feature_ids = json.loads(request.GET.get("ids","[]"))
         except ValueError, exc:
             message = 'JSON decode error: %s' % unicode(exc)
             logger.warning(message)
             return HttpResponseBadRequest(message)
-        
+
         logger.debug("A DELETE request was sent to features with the "
                      "params %s" % feature_ids)
 
@@ -547,7 +536,7 @@ def feature(request):
         feature_queryset = Feature.objects.filter(id__in = feature_ids,
                                                 user__exact = request.user)
 
-            
+
         #set as expired
         exp_time = datetime.datetime.today()
         deleted_features = []
@@ -556,7 +545,7 @@ def feature(request):
                 feat.expire_time = exp_time
                 feat.save()
                 deleted_features.append(feat.id)
-                
+
         """
         Test if there were features already deleted (with an expiration
         time already set) and return not found
@@ -569,7 +558,7 @@ def feature(request):
                                         "%(deleted_features)s "
                                         "deleted." % {'not_deleted': not_deleted,
                                                       'deleted_features': deleted_features})
-        
+
         logger.info("All Features were deleted successfully")
         return HttpResponse(_(u"Features with ids "
                               "%s deleted." % deleted_features))
