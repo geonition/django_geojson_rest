@@ -104,7 +104,7 @@ def feature(request):
         try:
             feature_old = Feature.objects.get(id__exact = feature_id)
         except DoesNotExist, doesNotExist:
-            logger.debug("The Feature with id %i was not found" %feature_id)
+            logger.debug("The Feature with id %i was not found" % feature_id)
             raise CustomError("The feature with id %i was not found. Details %s" % (feature_id, str(doesNotExist)), 400, str(doesNotExist))
             
         
