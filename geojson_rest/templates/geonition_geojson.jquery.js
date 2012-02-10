@@ -49,10 +49,16 @@ function(limit_params, callback_function) {
 */
 gnt.geo['create_feature'] =
 function(feature_or_feature_collection, callback_function) {
+
+    var geojson_string = feature_or_feature_collection;
+    if( typeof(" ") !== typeof(geojson_string)) {
+        geojson_string = JSON.stringify(geojson_string);
+    }
+
     $.ajax({
         url: "{% url api_feature %}",
         type: "POST",
-        data: JSON.stringify(feature_or_feature_collection),
+        data: geojson_string,
         contentType: "application/json",
         success: function(data) {
             if(callback_function !== undefined) {
@@ -78,10 +84,16 @@ function(feature_or_feature_collection, callback_function) {
 */
 gnt.geo['update_feature'] =
 function(feature_or_feature_collection, callback_function) {
+
+    var geojson_string = feature_or_feature_collection;
+    if( typeof(" ") !== typeof(geojson_string)) {
+        geojson_string = JSON.stringify(geojson_string);
+    }
+
     $.ajax({
         url: "{% url api_feature %}",
         type: "PUT",
-        data: JSON.stringify(feature_or_feature_collection),
+        data: geojson_string,
         contentType: "application/json",
         success: function(data) {
             if(callback_function) {
