@@ -552,7 +552,7 @@ def feature(request):
         """
         not_deleted = [id for id in feature_ids if id not in deleted_features]
         if len(not_deleted) > 0:
-            logger.warning("Delete result: Features %s not found and featured %s deleted" % (not_deleted, deleted_features))
+            logger.warning("Delete result: Features %s not found, features %s deleted" % (not_deleted, deleted_features))
             return HttpResponseNotFound(u"Features %(not_deleted)s not "
                                         "found and featured "
                                         "%(deleted_features)s "

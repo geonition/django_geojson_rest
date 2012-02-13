@@ -117,8 +117,14 @@ function(feature_or_feature_collection, callback_function) {
 */
 gnt.geo['delete_feature'] =
 function(feature_or_feature_collection, callback_function) {
+
+    // in this case the geojson object is needed
+    if( typeof( {} ) !== typeof(feature_or_feature_collection) ) {
+        feature_or_feature_collection = JSON.parse(feature_or_feature_collection);
+    }
+
     /*
-    ensure the backwords compatibility
+    ensure the backwards compatibility
     New logic expects an array of ids
     If just one id is sent make it an array of length one
     */
