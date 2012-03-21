@@ -9,7 +9,8 @@ from models import Feature
 from models import Property
 from django.conf import settings
 from pymongo import Connection
-#from django.test.utils import override_settings #supported in django 1.4
+from django.utils import simplejson as json
+from django.test.utils import override_settings #supported in django 1.4
 
 import urllib
 
@@ -18,13 +19,8 @@ import sys
 import datetime
 import time
 
-if sys.version_info >= (2, 6):
-    import json
-else:
-    import simplejson as json
 
-#this one is available in current development version, I wait until release 24.8.2011
-#@override_settings(PROPERTIES_COLLECTION='test_properties')
+@override_settings(PROPERTIES_COLLECTION='test_properties')
 class FeatureTest(TestCase):
     """
     This class test the feature application.
@@ -39,17 +35,19 @@ class FeatureTest(TestCase):
 
     def tearDown(self):
 
-        database_host = getattr(settings, "MONGODB_HOST", 'localhost')
-        database_port = getattr(settings, "MONGODB_PORT", 27017)
-        database_name = getattr(settings, "MONGODB_DBNAME", 'geonition')
-        database_username = getattr(settings, "MONGODB_USERNAME", '')
-        database_password = getattr(settings, "MONGODB_PASSWORD", '')
-        collection_name = getattr(settings, "PROPERTIES_COLLECTION", 'test')
+        if getattr(settings, "USE_MONGODB", False):
 
-        #connection = Connection(database_host, database_port)
-        #database = connection[database_name]
-        #database.authenticate(database_username, database_password)
-        #database.drop_collection(collection_name)
+            database_host = getattr(settings, "MONGODB_HOST", 'localhost')
+            database_port = getattr(settings, "MONGODB_PORT", 27017)
+            database_name = getattr(settings, "MONGODB_DBNAME", 'geonition')
+            database_username = getattr(settings, "MONGODB_USERNAME", '')
+            database_password = getattr(settings, "MONGODB_PASSWORD", '')
+            collection_name = getattr(settings, "PROPERTIES_COLLECTION", 'test_properties')
+
+            connection = Connection(database_host, database_port)
+            database = connection[database_name]
+            database.authenticate(database_username, database_password)
+            database.drop_collection(collection_name)
 
         self.client.logout()
 
