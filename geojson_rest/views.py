@@ -61,14 +61,12 @@ def feature(request):
         # Have to make OGRGeometry as GEOSGeometry
         # does not support spatial reference systems
         try:
-
             geos = OGRGeometry(json.dumps(geometry)).geos
         except OGRException, ogrException:
-            logger.warning("The submited geometry is invalid: %s " % ogrException)
             raise ogrException
         except GEOSException, geosEx:
-            logger.warning("Error encountered checking Geometry: %s " % geosEx)
             raise geosEx
+
 
         #save the feature
         new_feature = Feature(geometry=geos,
@@ -78,7 +76,6 @@ def feature(request):
 
         #add the id to the feature json
         identifier = new_feature.id
-        logger.info("The feature was successfully saved with id %i" %identifier)
 
         feature_json['id'] = identifier
 
@@ -86,7 +83,6 @@ def feature(request):
         new_property = Property(feature=new_feature,
                                 json_string=json.dumps(properties))
         new_property.save()
-        logger.info("The property was successfuly saved")
 
         return identifier
 
@@ -169,8 +165,7 @@ def feature(request):
 
         elif(request.user.is_authenticated()):
             #else the user can only view his/her own features
-            feature_queryset = \
-                    Feature.objects.filter(user__exact = request.user)
+            feature_queryset = Feature.objects.filter(user__exact = request.user)
         else:
             feature_queryset = Feature.objects.none()
 
@@ -368,9 +363,6 @@ def feature(request):
     elif request.method == "POST":
 
         if not request.user.is_authenticated():
-            logger.warning("There was a %s request to features "
-                           "but the user was not "
-                           "authenticated" % request.method)
             return HttpResponseUnauthorized("You need to login or "
                                             "create a session in order "
                                             "to create features")
@@ -379,14 +371,12 @@ def feature(request):
         feature_json = None
 
         try:
-            logger.debug("POST request to features() with params %s " % request.POST.keys()[0])
             feature_json = json.loads(request.POST.keys()[0])
         except IndexError:
             return HttpResponseBadRequest(_("POST data was empty so "
                                             "could not create the feature"))
         except ValueError, exc:
             message = 'JSON decode error: %s' % unicode(exc)
-            logger.warning(message)
             return HttpResponseBadRequest(message)
 
 
@@ -395,7 +385,6 @@ def feature(request):
         try:
             geojson_type = feature_json['type']
         except KeyError:
-            logger.warning("The geojson does not include a type")
             return HttpResponseBadRequest(_("geojson did not inclue a type." + \
                                           " Accepted types are " + \
                                           "'FeatureCollection' and 'Feature'."))
@@ -446,8 +435,6 @@ def feature(request):
                                                   "checking Geometry")
 
             ret_featurecollection['features'].append(feat)
-
-            logger.info("The feature collection was successfuly saved")
 
             return HttpResponse(json.dumps(ret_featurecollection))
 
