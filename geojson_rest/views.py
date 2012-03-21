@@ -369,12 +369,12 @@ def feature(request):
 
         #supports saving geojson Features
         feature_json = None
-
+        
         try:
             feature_json = json.loads(request.POST.keys()[0])
         except IndexError:
-            return HttpResponseBadRequest(_("POST data was empty so "
-                                            "could not create the feature"))
+            return HttpResponseBadRequest("POST data was empty so "
+                                            "could not create the feature")
         except ValueError, exc:
             message = 'JSON decode error: %s' % unicode(exc)
             return HttpResponseBadRequest(message)
@@ -547,8 +547,8 @@ def feature(request):
                                                       'deleted_features': deleted_features})
 
         logger.info("All Features were deleted successfully")
-        return HttpResponse(_(u"Features with ids "
-                              "%s deleted." % deleted_features))
+        return HttpResponse(u"Features with ids "
+                            "%s deleted." % deleted_features)
 
 
 
