@@ -1,26 +1,10 @@
 from django.db import models
-from django.contrib.gis.db import models as gis_models
-from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist
-from geonition_utils.manager import MongoDBManager
-from pymongo import Connection
 from django.conf import settings
+from django.contrib.gis.db import models as gismodels
+from django.contrib.auth.models import User
+from django.utils import simplejson as json
 
-import datetime
-import sys
-
-if sys.version_info >= (2, 6):
-    import json
-else:
-    import simplejson as json
-
-#this can be used instead of writing getattr everywhere
-USE_MONGODB = getattr(settings, "USE_MONGODB", False)
-
-
-# Create your models herelas
-# GEOMETRY MODELS
-class Feature(gis_models.Model):
+class Feature(gismodels.Model):
     """
     This model represents a geographical feature.
 
@@ -32,7 +16,7 @@ class Feature(gis_models.Model):
     create_time -- the time this feature was created
     expire_time -- the time this feature was or will be expired
     """
-    geometry = gis_models.GeometryField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
+    geometry = gismodels.GeometryField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
     user = models.ForeignKey(User)
     group = models.CharField(default = '@self', max_length = 10)
     private = models.BooleanField(default = True)
@@ -40,7 +24,7 @@ class Feature(gis_models.Model):
     create_time = models.DateTimeField(auto_now_add = True)
     expire_time = models.DateTimeField(null = True)
 
-    objects = gis_models.GeoManager()
+    objects = gismodels.GeoManager()
 
 class Property(models.Model):
     """

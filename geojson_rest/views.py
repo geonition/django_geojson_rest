@@ -1,15 +1,38 @@
 from geonition_utils.views import RequestHandler
+from django.http import HttpResponse
 
-class Geo(RequestHandler):
+class Feature(RequestHandler):
 
-    def get(request, user, group, feature):
-        pass
+    def get(self,
+            request,
+            user = '@me',
+            group = '@self',
+            feature = None):
+        
+        return HttpResponse("{}",
+                            content_type = "application/json")
+        
+    def post(self,
+            request,
+            user = '@me',
+            group = '@self',
+            feature = None):
+        
+        return HttpResponse("{}",
+                            content_type = "application/json")
 
-    def post(request, user, group):
-        pass
+    def put(self,
+            request,
+            user = '@me',
+            group = '@self',
+            feature = None):
+        return HttpResponse("{}",
+                            content_type = "application/json")
 
-    def put(request, user, group, feature):
-        pass
-
-    def delete(request, user, group, feature):
-        pass
+    def delete(self,
+               request,
+               user = '@me',
+               group = '@self',
+               feature = None):
+        return HttpResponse("{}",
+                            content_type = "application/json")
