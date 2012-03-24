@@ -1,5 +1,7 @@
 from geonition_utils.views import RequestHandler
-from django.http import HttpResponse
+from geonition_utils.http import HttpResponse
+from models import Feature
+from django.utils import simplejson as json
 
 class Feature(RequestHandler):
 
@@ -18,6 +20,21 @@ class Feature(RequestHandler):
             group = '@self',
             feature = None):
         
+        print "post"
+        print request
+        print user
+        print group
+        print feature
+        print request.body
+        
+        #validate the sent feature or featurecollection
+        try:
+            json_object = json.loads(request.body)
+        except ValueError:
+            return HttpBadRequest()
+        geometry = json_object['geometry']
+        properties = json_object['properties']
+            
         return HttpResponse("{}",
                             content_type = "application/json")
 
