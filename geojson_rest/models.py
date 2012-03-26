@@ -1,256 +1,171 @@
 from django.db import models
-from django.contrib.gis.db import models as gis_models
-from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist
-from geonition_utils.manager import MongoDBManager
-from pymongo import Connection
 from django.conf import settings
+from django.contrib.gis.db import models as gismodels
+from django.contrib.gis.gdal import OGRGeometry
+from django.contrib.auth.models import User
+from django.utils import simplejson as json
+from geonition_utils.models import JSON
+from geonition_utils.models import TimeD
 
-import datetime
-import sys
-
-if sys.version_info >= (2, 6):
-    import json
-else:
-    import simplejson as json
-
-#this can be used instead of writing getattr everywhere
-USE_MONGODB = getattr(settings, "USE_MONGODB", False)
-
-
-# Create your models herelas   
-# GEOMETRY MODELS
-class Feature(gis_models.Model):
-    """
-    A Feature is defined by structure as a geojson feature
-    containing a geometry object and has properties in
-    the Property model.
-    
-    >>> u = User.objects.create_user('test-feature','')
-    >>> f = Feature(geometry = 'POINT(2 3)', user = u)
-    >>> f.expire_time
-    >>> f.create_time
-    >>> f.save()
-    >>> type(f.create_time)
-    <type 'datetime.datetime'>
-    >>> from django.contrib.gis.gdal import OGRGeometry
-    >>> geos = OGRGeometry(json.dumps({'type':'point', 'coordinates': [2, 3]})).geos
-    >>> f_temp = f.update(geometry = geos) #same geom should not update
-    >>> f_temp.id == f.id
-    True
-    >>> geos = OGRGeometry(json.dumps({'type':'point', 'coordinates': [4, 4]})).geos
-    >>> f_temp = f.update(geometry = geos) #different geom should update
-    >>> f_temp.id == f.id
-    False
-    >>> type(f.expire_time) #update should have expired this
-    <type 'datetime.datetime'>
-    >>> f2 = Feature.objects.get(id = f.id)
-    >>> f2.expire_time == f.expire_time
-    True
-    >>> type(f_temp.expire_time) #the current feature should not be expired
-    <type 'NoneType'>
-    >>> f_temp.delete()
-    >>> type(f_temp.expire_time)
-    <type 'datetime.datetime'>
-    """
-    geometry = gis_models.GeometryField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
-    user = models.ForeignKey(User)
-    
-    create_time = models.DateTimeField(auto_now_add=True, null=True)
-    expire_time = models.DateTimeField(null=True)
-    
-    objects = gis_models.GeoManager()
-    
-    def save(self, *args, **kwargs):
-
-        super(Feature, self).save(*args, **kwargs)
-        
-        try:
-            properties = Property.objects.filter(feature__exact=self)
-        except ObjectDoesNotExist:
-            properties = Property(feature=self, json_string='{}')
-            properties.save()
-        
-    
-    def delete(self, *args, **kwargs):
-        self.expire_time = datetime.datetime.today()
-
-        properties = Property.objects.filter(feature__exact=self).filter(expire_time=None)
-        for prop in properties:
-            prop.expire_time = self.expire_time
-            prop.save()
-        
-        super(Feature, self).save(*args, **kwargs)
-        
-        return None
-    
-    def update(self, geometry=None, *args, **kwargs):
-        """
-        This function updates the feature if the new geometry
-        is different from the saved one.
-        
-        Also if feature is updated it returns a new feature
-        with the new geometry and sets expired time on the
-        old one.
-        """
-        if(geometry != None and geometry != self.geometry):
-            #set old feature as expired
-            self.expire_time = datetime.datetime.today()
-            super(Feature, self).save(*args, **kwargs)
-        
-            #save the new feature
-            new_feature = Feature(user = self.user,
-                                  geometry = geometry)
-            new_feature.save()
-            return new_feature
-        
-        return self   
-        
-    def geojson(self):
-        """
-        Returns a geojson object of with the latest properties
-        belonging to this feature.
-        """
-        properties = None
-        properties_dict = None
-        
-        try:
-            # this should be changed to support different time queries
-            properties = Property.objects.filter(feature__exact=self)\
-                                            .latest('create_time')
-
-            properties_dict = json.loads(properties.json_string)
-
-        except ObjectDoesNotExist:
-            properties_dict = {}
-            
-        feature_json = {}
-        
-        feature_json = {"id": self.id,
-                        "geometry": json.loads(self.geometry.json),
-                        "properties": properties_dict}
-        
-        return feature_json
-    
-    def __unicode__(self):
-        feature_json = self.geojson()
-        
-        return str(feature_json)
-        
-        
-    class Meta:
-        permissions = (
-            ("can_view_all", "Can view all features"),
-            ("can_view_non_confidential",
-            "Can view the non confidential features"),)
-   
 class Property(models.Model):
     """
-    This model saves all the properties for the features,
-    
-    >>> u = User.objects.create_user('test-property','')
-    >>> f = Feature(geometry = 'POINT(2 3)', user = u)
-    >>> f.save()
-    >>> p = Property(feature = f, json_string='{"some_prop": 140}')
-    >>> p.save()
-    >>> p.expire_time
-    >>> type(p.create_time)
-    <type 'datetime.datetime'>
-    >>> p1 = p.update('{"some_prop": 140}') #should not update same json
-    >>> p1.id == p.id
-    True
-    >>> p1 = p.update('{"some_prop": 141}') #should update different json
-    >>> p1.id == p.id
-    False
-    >>> type(p.expire_time)
-    <type 'datetime.datetime'>
-    >>> type(p1.expire_time)
-    <type 'NoneType'>
-    >>> p1.delete()
-    >>> type(p1.expire_time)
-    <type 'datetime.datetime'>
+    This model represents a property that can be attached to
+    a feature or many features.
+
+    This model is supposed to be extended in any appropriate way
+
+    feature -- geographical feature that this property belong to
+    user -- the user that added this property
+    json_data -- foreignkey to the json data model
+    time -- foreignkey to the time model
     """
-    feature = models.ForeignKey(Feature, related_name='properties')
-    json_string = models.TextField()
+    user = models.ForeignKey(User)
+    
+    json_data = models.OneToOneField(JSON)
 
-    create_time = models.DateTimeField(auto_now_add=True, null=True)
-    expire_time = models.DateTimeField(null=True)
+    time = models.OneToOneField(TimeD)
     
-    objects = models.Manager()
-    
-    if USE_MONGODB:
-        mongodb_collection_name = getattr(settings,
-                                          'PROPERTIES_COLLECTION',
-                                          'feature_properties')
-        
-        mongodb = MongoDBManager() #manager for querying json
-    
-    def save(self, *args, **kwargs):    
-        #save this new property
+    def create(self, properties, user, *args, **kwargs):
+        """
+        This function saves properties of the feature,
+        """
+        self.user = user
+        js = JSON(json_string = json.dumps(properties),
+                  collection = 'properties')
+        js.save()
+        self.json_data = js
+        timed = TimeD()
+        timed.save()
+        self.time = timed
         super(Property, self).save(*args, **kwargs)
-        
-        self.save_json_to_mongodb()
-                    
-                
-    def save_json_to_mongodb(self):
-        """
-        This function saves the JSON to mongodb
-        """
-        #do nothing if USE_MONGODB False
-        if USE_MONGODB:
-            insert_json = json.loads(self.json_string)
-            Property.mongodb.save(insert_json, self.id)
-        
-    def delete(self, *args, **kwargs):
-        self.expire_time = datetime.datetime.today()
 
-        super(Property, self).save(*args, **kwargs)
+    def update(self, properties, *args, **kwargs):
+        self.json_data.json_string = json.dumps(properties)
+        self.json_data.save()
         
-        return None
-    
-    def update(self, json_string, *args, **kwargs):
-        if self.json_string != json_string:
-            #set old feature as expired
-            self.expire_time = datetime.datetime.today()
-            super(Property, self).save(*args, **kwargs)
-            
-            #save the new property
-            new_property = Property(feature = self.feature,
-                                    json_string = json_string)
-            new_property.save()
-            
-            return new_property
-        
-        return self
-    
-    def geojson(self):
-        """
-        Returns a geojson Feature with these(this) properties.
-        """
-        properties = json.loads(self.json_string)
-        properties['user_id'] = self.feature.user.id
-        properties['feature_id'] = self.feature.id
-        properties['create_time'] = "%s-%s-%s-%s-%s" % (self.create_time.year,
-                                                        self.create_time.month,
-                                                        self.create_time.day,
-                                                        self.create_time.hour,
-                                                        self.create_time.minute)
-        if self.expire_time != None:
-           properties['expire_time'] = "%s-%s-%s-%s-%s" % (self.expire_time.year,
-                                                           self.expire_time.month,
-                                                           self.expire_time.day,
-                                                           self.expire_time.hour,
-                                                           self.expire_time.minute)
+    def to_json(self):
+        if self.time.expire_time == None:
+            exrtime = ''
         else:
-           properties['expire_time'] = "null"
-           
-        feature_dict = {"id": self.feature.id,
-                        "type": "Feature",
-                        "geometry": json.loads(self.feature.geometry.json),
-                        "properties": properties}
+            exrtime = self.time.expire_time.isoformat()
+            
+        retval = self.json_data.json()
+        retval.update({'time': {'create_time': self.time.create_time.isoformat(),
+                                'expire_time': exrtime},
+                        'user': self.user.username})
+        return retval
+    
+    class Meta:
+        unique_together = ('json_data', 'user', 'time')
         
-        return feature_dict
+        
+class Feature(gismodels.Model):
+    """
+    This model represents a geographical feature.
+
+    fields:
+    geometry -- this is the geometry for the feature
+    user -- the user that owns this feature
+    group -- the group to which this feature belong to, default is '@self'
+    private -- tells the view if this is a private position which should not be shown to others
+    time -- foreignkey to the time model
+    """
+    geometry = gismodels.GeometryField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
+    user = models.ForeignKey(User)
+    group = models.CharField(default = '@self', max_length = 10)
+    private = models.BooleanField(default = True)
+    properties = models.ManyToManyField(Property)
+    time = models.OneToOneField(TimeD)
+
+    objects = gismodels.GeoManager()
     
     
-    def __unicode__(self):
-        return self.json_string
+    def create(self, feature, *args, **kwargs):
+        """
+        This function creates a feature which is a
+        python dict representation of a geojson object.
+        
+        The feature properties like create_time or
+        expire time should be given in the feature object
+        e.g.
+        {
+        "type": "Feature",
+        "geometry": ...,
+        "properties": ...,
+        "id": ...,
+        "private": ...,
+        "time": ...,
+        "user": ...,
+        "group": ...
+        }
+        """
+        self.geometry = OGRGeometry(json.dumps(feature['geometry'])).geos
+        self.private = feature['private']
+        timed = TimeD()
+        timed.save()
+        self.time = timed
+        prop = Property()
+        prop.create(feature['properties'], self.user)
+        super(Feature, self).save(*args, **kwargs)
+        self.properties.add(prop)
+    
+    def update(self, feature, user, *args, **kwargs):
+        """
+        This function updates the feature, user indicates
+        the user updating the feature.
+        
+        only some values can be updated:
+        private -- can be updated by the creator of the feature
+        properties -- can be updated by all (saved separate per user)
+        """
+        if self.user == user:
+            self.private = feature['private']
+            old_property = self.properties.get(user = user)
+            old_property.update(feature['properties'])
+            self.save(*args, **kwargs)
+        else:
+            try:
+                old_property = self.properties.get(user = user)
+                old_property.update(feature['properties'])
+            except Property.DoesNotExist:
+                prop = Property()
+                prop.create(feature['properties'], user)
+                self.properties.add(prop)
+    
+    def get_properties(self):
+        """
+        This function returnes all the properties.
+        
+        overrides keys so be sure to save them in a way that
+        that does not happen..
+        """
+        property_entities = self.properties.all()
+        properties = {}
+        for prop in property_entities:
+            properties.update(prop.to_json())
+            
+        return properties
+    
+    def to_json(self):
+        """
+        This function return a dictionary representation
+        of this object.
+        """
+        if self.time.expire_time == None:
+            exrtime = ''
+        else:
+            exrtime = self.time.expire_time.isoformat()
+            
+        json_obj = {
+            'id': self.id,
+            'private': self.private,
+            'geometry': json.loads(self.geometry.json),
+            'properties': self.get_properties(),
+            'type': 'Feature',
+            'time': {'create_time': self.time.create_time.isoformat(),
+                     'expire_time': exrtime},
+            'user': self.user.username,
+            'group': self.group
+        }
+        
+        return json_obj
