@@ -17,19 +17,14 @@ class FeatureView(RequestHandler):
             group = '@self',
             feature = None):
         
-        print user
-        print group
-        print feature
         if feature != None:
             features = Feature.objects.filter(id = feature)
             
         elif user != '@all' and group != '@all':
             user = self.get_user(request, username = user)
-            print user
             if user == request.user:
                 features = Feature.objects.filter(user = user,
                                                   group = group)
-                print features
             else:
                 own_features = Feature.objects.filter(user = request.user,
                                                       group = group)
