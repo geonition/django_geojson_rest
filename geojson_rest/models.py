@@ -72,7 +72,7 @@ class Feature(gismodels.Model):
     """
     geometry = gismodels.GeometryField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
     user = models.ForeignKey(User)
-    group = models.CharField(default = '@self', max_length = 10)
+    group = models.CharField(default = '@self', max_length = 50)
     private = models.BooleanField(default = True)
     properties = models.ManyToManyField(Property)
     time = models.OneToOneField(TimeD)
@@ -100,7 +100,7 @@ class Feature(gismodels.Model):
         }
         """
         self.geometry = OGRGeometry(json.dumps(feature['geometry'])).geos
-        self.private = feature['private']
+        self.private = feature.get('private', True)
         timed = TimeD()
         timed.save()
         self.time = timed
@@ -119,7 +119,7 @@ class Feature(gismodels.Model):
         properties -- can be updated by all (saved separate per user)
         """
         if self.user == user:
-            self.private = feature['private']
+            self.private = feature.get('private', True)
             old_property = self.properties.get(user = user)
             old_property.update(feature['properties'])
             self.save(*args, **kwargs)

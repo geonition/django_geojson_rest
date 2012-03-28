@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from django.utils import simplejson as json
 from geonition_utils.exceptions import Http400
 from geonition_utils.http import HttpResponse
@@ -16,18 +17,27 @@ class FeatureView(RequestHandler):
             group = '@self',
             feature = None):
         
+        print user
+        print group
+        print feature
         if feature != None:
             features = Feature.objects.filter(id = feature)
             
         elif user != '@all' and group != '@all':
             user = self.get_user(request, username = user)
+            print user
             if user == request.user:
                 features = Feature.objects.filter(user = user,
                                                   group = group)
+                print features
             else:
-                features = Feature.objects.filter(user = user,
-                                                 group = group,
-                                                 private = False)
+                own_features = Feature.objects.filter(user = request.user,
+                                                      group = group)
+                others_features = Feature.objects.filter(user = user,
+                                                         group = group,
+                                                         private = False)
+                features = own_features | others_features
+                
         elif user == '@all' and group != '@all':
             features = Feature.objects.filter(group = group,
                                              private = False)
@@ -62,7 +72,6 @@ class FeatureView(RequestHandler):
         
         # load the json and validate format
         json_object = json.loads(request.body)
-        geojson_type = json_object['type']
         user = self.get_user(request,
                              username = user)
         
@@ -73,17 +82,14 @@ class FeatureView(RequestHandler):
         
         json_obj_response = {}
         
-        if geojson_type == 'Feature':
-            new_feature = Feature(user = user,
-                                  group = group)
-            new_feature.create(json_object)
-            uri = "%s/%s/%i" % (user.username,
-                                group,
-                                new_feature.id)
-            created_entity = json.dumps(new_feature.to_json())
-        else:
-            return HttpResponseBadRequest('geojson type has to be Feature')
-        
+        new_feature = Feature(user = user,
+                              group = group)
+        new_feature.create(json_object)
+        uri = "%s/%s/%s/%i" % (reverse('feat'),
+                               user.username,
+                               group,
+                               new_feature.id)
+        created_entity = json.dumps(new_feature.to_json())
         
         return HttpResponseCreated(uri, created_entity)
 

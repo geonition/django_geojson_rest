@@ -1,165 +1,229 @@
 /*
  javascript functions for the geojson_rest app
 */
-gnt.app_version['geojson_rest'] = '2.0.0';
+gnt.app_version['geojson_rest'] = '4.0.x';
 gnt['geo'] = {};
 
 /*
-gnt.geo.get_features retrieves features according to the limiting params
-
-the limit_params is a GET string starting with a "?"
-
-reserved keys for the limiting parameter include the
-following:
-
-user_id = id of user
-time = time when the feature was valid
+ This function queries features from the database that fit the
+ given values.
+ 
+ user -- the user the features belong to, also allowed: '@me', '@all'
+ group -- the group the features belong to, also allowed: '@all', '@self'
+ limit_params -- string starting with '?'
+    parameters in the get limiting parameters:
+    time -- the time the features was valid, also allowed '@now', '@all'
 
 */
 gnt.geo['get_features'] =
-function(limit_params, callback_function) {
+function(user, group, limit_params, ajax_params) {
     if(limit_params == undefined) {
         limit_params = "";
     }
-
-    $.ajax({
-        url: "{% url api_feature %}" + limit_params,
-        type: "GET",
-        contentType: "application/json",
-        success: function(data) {
-            if(callback_function !== undefined) {
-                callback_function(data);
-                }
-            },
-        error: function(e) {
-            if(callback_function !== undefined) {
-                callback_function(e);
+    if(ajax_params === undefined) {
+        ajax_param = {};
+    }
+    if(user === undefined) {
+        user = '@me';
+    }
+    if(group === undefined) {
+        group = '@self';
+    }
+    
+    var kwargs = $.extend(
+        ajax_params,
+        {
+            url: "{% url feat %}/" + user + "/" + group + limit_params,
+            type: "GET",
+            contentType: "application/json",
+            dataType: "json",
+            beforeSend: function(xhr) {
+                xhr.withCredentials = true;
             }
-        },
-        dataType: "json",
-        beforeSend: function(xhr) {
-            xhr.withCredentials = true;
         }
-    });
+    );
+    $.ajax(kwargs);
 };
 
 /*
- create_feature function saves a new feature of features from a feature
- collection to the database
+ This function retreives only one feature from the database
+ that fit the given user, group and feature_id.
+ 
+ user -- the user the features belong to, also allowed: '@me', '@all'
+ group -- the group the features belong to, also allowed: '@all', '@self'
+ feature_id -- the id of the feature
+
+*/
+gnt.geo['get_feature'] =
+function(user, group, feature_id, ajax_params) {
+    if(limit_params == undefined) {
+        limit_params = "";
+    }
+    if(ajax_params === undefined) {
+        ajax_param = {};
+    }
+    if(user === undefined) {
+        user = '@me';
+    }
+    if(group === undefined) {
+        group = '@self';
+    }
+    
+    var kwargs = $.extend(
+        ajax_params,
+        {
+            url: "{% url feat %}/" + user + "/" + group + "/" + feature_id,
+            type: "GET",
+            contentType: "application/json",
+            dataType: "json",
+            beforeSend: function(xhr) {
+                xhr.withCredentials = true;
+            }
+        }
+    );
+    $.ajax(kwargs);
+};
+
+/*
+ create_feature function saves a new feature, this function
+ only saves one feature at the time. The function takes the
+ following arguments:
+ user -- the user that is saving the feature, '@me', '@all' reserved
+ group -- the group the feature belongs to '@self', '@all' reserved
+ feature -- geojson feature with additional parameters
+ ajax_params -- possibility to extend the ajax call with this json
+ 
+ The feature can have the following parameters:
+ 
+ "type" -- always 'Feature' required
+ "geometry" -- geojson geometry required
+ "properties" -- json object required
+ "id" -- will be overridden as this will create a new feature
+ "private" -- tells if the feature is private or not, optional, default: true
+ "time" -- time object (read only)
+ "user" -- the owner of the feature (read only)
+ "group" -- the group the feature belong to (read only)
+ 
 */
 gnt.geo['create_feature'] =
-function(feature_or_feature_collection, callback_function) {
+function(user, group, feature, ajax_params) {
 
-    var geojson_string = feature_or_feature_collection;
+    var geojson_string = feature;
     if( typeof(" ") !== typeof(geojson_string)) {
         geojson_string = JSON.stringify(geojson_string);
     }
-
-    $.ajax({
-        url: "{% url api_feature %}",
-        type: "POST",
-        data: geojson_string,
-        contentType: "application/json",
-        success: function(data) {
-            if(callback_function !== undefined) {
-                callback_function(data);
+    if(ajax_params === undefined) {
+        ajax_param = {};
+    }
+    if(user === undefined) {
+        user = '@me';
+    }
+    if(group === undefined) {
+        group = '@self';
+    }
+    
+    var kwargs = $.extend(
+        ajax_params,
+        {
+            url: "{% url feat %}/" + user + "/" + group,
+            type: "POST",
+            data: geojson_string,
+            contentType: "application/json",
+            dataType: "json",
+            beforeSend: function(xhr) {
+                xhr.withCredentials = true;
             }
-        },
-        error: function(e) {
-            if(callback_function !== undefined) {
-                callback_function(e);
-            }
-        },
-        dataType: "json",
-        beforeSend: function(xhr) {
-            xhr.withCredentials = true;
         }
-    });
+    );
+    $.ajax(kwargs);
 };
 
 /*
- update_feature, updates a feature with and id or a set of
- features in a featurecollection. All features in the collection
- should already have been saved once and should contain an id.
+ update_feature, updates a feature with an id.
+ All features in the collection should already have been saved
+ once and should contain an id.
+ 
+ user -- the user that the feature belong to
+ group -- the group the feature belongs to
+ feature -- the features to be updated (check create for params)
+ ajax_params -- extra ajax params for ajax call
 */
 gnt.geo['update_feature'] =
-function(feature_or_feature_collection, callback_function) {
-
-    var geojson_string = feature_or_feature_collection;
+function(user, group, feature, ajax_params) {
+    var geojson_string = feature;
+    var feature_id = '';
     if( typeof(" ") !== typeof(geojson_string)) {
+        feature_id = feature.id;
         geojson_string = JSON.stringify(geojson_string);
+    } else {
+        // need to get the id of the feature
+        feature_id = JSON.parse(geojson_string).id;
     }
-
-    $.ajax({
-        url: "{% url api_feature %}",
-        type: "PUT",
-        data: geojson_string,
-        contentType: "application/json",
-        success: function(data) {
-            if(callback_function) {
-                callback_function(data);
+    if(ajax_params === undefined) {
+        ajax_params = {};
+    }
+    if(user === undefined) {
+        user = '@me';
+    }
+    if(group === undefined) {
+        group = '@self';
+    }
+    
+    var kwargs = $.extend(
+        ajax_params,
+        {
+            url: "{% url feat %}/" + user + "/" + group + "/" + feature_id,
+            type: "PUT",
+            data: geojson_string,
+            contentType: "application/json",
+            dataType: "json",
+            beforeSend: function(xhr) {
+                xhr.withCredentials = true;
             }
-        },
-        error: function(e) {
-            if(callback_function) {
-                callback_function(e);
-            }
-        },
-        dataType: "json",
-        beforeSend: function(xhr) {
-            xhr.withCredentials = true;
         }
-    });
+    );
+
+    $.ajax(kwargs);
 };
 
 /*
- delete_feature, deletes the feature(s) with the given feature_id(s)
+ delete_feature, deletes one feature
+ the feature has to have an id set to be deleted.
 */
 gnt.geo['delete_feature'] =
-function(feature_or_feature_collection, callback_function) {
-
-    // in this case the geojson object is needed
-    if( typeof( {} ) !== typeof(feature_or_feature_collection) ) {
-        feature_or_feature_collection = JSON.parse(feature_or_feature_collection);
+function(user, group, feature, ajax_params) {
+    var geojson_string = feature;
+    var feature_id = '';
+    if( typeof(" ") !== typeof(geojson_string)) {
+        feature_id = feature.id;
+        geojson_string = JSON.stringify(geojson_string);
+    } else {
+        // need to get the id of the feature
+        feature_id = JSON.parse(geojson_string).id;
     }
-
-    /*
-    ensure the backwards compatibility
-    New logic expects an array of ids
-    If just one id is sent make it an array of length one
-    */
-    var feature_ids_array = [];
-    var type = feature_or_feature_collection.type;
-    var i = 0;
-
-    if (type === "Feature"){
-        feature_ids_array[0] = feature_or_feature_collection.id;
+    if(ajax_params === undefined) {
+        ajax_params = {};
     }
-    else if (type === "FeatureCollection") {
-        for(i = 0; i < feature_or_feature_collection.features.length; i++){
-            if (feature_or_feature_collection.features[i].id !== undefined){
-                feature_ids_array.push(feature_or_feature_collection.features[i].id);
+    if(user === undefined) {
+        user = '@me';
+    }
+    if(group === undefined) {
+        group = '@self';
+    }
+    
+    var kwargs = $.extend(
+        ajax_params,
+        {
+            url: "{% url feat %}/" + user + "/" + group + "/" + feature_id,
+            type: "DELETE",
+            contentType: "application/json",
+            dataType: "json",
+            beforeSend: function(xhr) {
+                xhr.withCredentials = true;
             }
         }
-    }
+    );
 
-    $.ajax({
-        url: "{% url api_feature %}?ids=" + JSON.stringify(feature_ids_array),
-        type: "DELETE",
-        success: function(data) {
-            if(callback_function) {
-                callback_function(data);
-            }
-        },
-        error: function(e) {
-            if(callback_function) {
-                callback_function(e);
-            }
-        },
-        dataType: "json",
-        beforeSend: function(xhr) {
-            xhr.withCredentials = true;
-        }
-    });
+    $.ajax(kwargs);
 };
 

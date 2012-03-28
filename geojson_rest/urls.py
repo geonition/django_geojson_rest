@@ -11,14 +11,14 @@ urlpatterns = patterns('geojson_rest.views',
                      'group': '@self'},
                     name="feat"),
 
-                (r'^feat/(?P<user>@?[-+_\w]+)$',
+                (r'^feat/(?P<user>@?[-+_\w\.]+)$',
                 FeatureView.as_view(),
                 {'group': '@self'}),
 
-                (r'^feat/(?P<user>@?[-+_\w]+)/(?P<group>@?[-+_\w]+)$',
+                (r'^feat/(?P<user>@?[-+_\w\.]+)/(?P<group>@?[-+_\w]+)$',
                 FeatureView.as_view()),
 
-                (r'^feat/(?P<user>@?[-+_\w]+)/(?P<group>@?[-+_\w]+)/(?P<feature>@?\d+)$',
+                (r'^feat/(?P<user>@?[-+_\w\.]+)/(?P<group>@?[-+_\w]+)/(?P<feature>@?\d+)$',
                 FeatureView.as_view()),
 
         )
