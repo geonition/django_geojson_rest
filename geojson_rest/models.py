@@ -20,11 +20,11 @@ class Property(models.Model):
     time -- foreignkey to the time model
     """
     user = models.ForeignKey(User)
-    
+
     json_data = models.OneToOneField(JSON)
 
     time = models.OneToOneField(TimeD)
-    
+
     def create(self, properties, user, *args, **kwargs):
         """
         This function saves properties of the feature,
@@ -42,23 +42,23 @@ class Property(models.Model):
     def update(self, properties, *args, **kwargs):
         self.json_data.json_string = json.dumps(properties)
         self.json_data.save()
-        
+
     def to_json(self):
         if self.time.expire_time == None:
             exrtime = ''
         else:
             exrtime = self.time.expire_time.isoformat()
-            
+
         retval = self.json_data.json()
         retval.update({'time': {'create_time': self.time.create_time.isoformat(),
                                 'expire_time': exrtime},
                         'user': self.user.username})
         return retval
-    
+
     class Meta:
         unique_together = ('json_data', 'user', 'time')
-        
-        
+
+
 class Feature(gismodels.Model):
     """
     This model represents a geographical feature.
@@ -78,13 +78,13 @@ class Feature(gismodels.Model):
     time = models.OneToOneField(TimeD)
 
     objects = gismodels.GeoManager()
-    
-    
+
+
     def create(self, feature, *args, **kwargs):
         """
         This function creates a feature which is a
         python dict representation of a geojson object.
-        
+
         The feature properties like create_time or
         expire time should be given in the feature object
         e.g.
@@ -108,12 +108,12 @@ class Feature(gismodels.Model):
         prop.create(feature['properties'], self.user)
         super(Feature, self).save(*args, **kwargs)
         self.properties.add(prop)
-    
+
     def update(self, feature, user, *args, **kwargs):
         """
         This function updates the feature, user indicates
         the user updating the feature.
-        
+
         only some values can be updated:
         private -- can be updated by the creator of the feature
         properties -- can be updated by all (saved separate per user)
@@ -131,11 +131,11 @@ class Feature(gismodels.Model):
                 prop = Property()
                 prop.create(feature['properties'], user)
                 self.properties.add(prop)
-    
+
     def get_properties(self):
         """
         This function returnes all the properties.
-        
+
         overrides keys so be sure to save them in a way that
         that does not happen..
         """
@@ -143,9 +143,9 @@ class Feature(gismodels.Model):
         properties = {}
         for prop in property_entities:
             properties.update(prop.to_json())
-            
+
         return properties
-    
+
     def to_json(self):
         """
         This function return a dictionary representation
@@ -155,7 +155,7 @@ class Feature(gismodels.Model):
             exrtime = ''
         else:
             exrtime = self.time.expire_time.isoformat()
-            
+
         json_obj = {
             'id': self.id,
             'private': self.private,
@@ -167,5 +167,5 @@ class Feature(gismodels.Model):
             'user': self.user.username,
             'group': self.group
         }
-        
+
         return json_obj
