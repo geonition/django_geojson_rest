@@ -22,7 +22,6 @@ class Property(models.Model):
     user = models.ForeignKey(User)
 
     json_data = models.OneToOneField(JSON)
-
     time = models.OneToOneField(TimeD)
 
     def create(self, properties, user, *args, **kwargs):
