@@ -42,7 +42,9 @@ class Property(models.Model):
         super(Property, self).save(*args, **kwargs)
 
     def update(self, properties, *args, **kwargs):
-        self.json_data.json_string = json.dumps(properties)
+        new_json = json.loads(self.json_data.json_string)
+        new_json.update(properties)
+        self.json_data.json_string = json.dumps(new_json)
         self.json_data.save()
 
     def to_json(self):

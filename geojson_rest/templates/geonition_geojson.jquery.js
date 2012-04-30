@@ -1,8 +1,8 @@
 /*
  javascript functions for the geojson_rest app
 */
-gnt.app_version['geojson_rest'] = '4.0.x';
-gnt['geo'] = {};
+gnt.app_version.geojson_rest = '5.0.0';
+gnt.geo = {};
 
 /*
  This function queries features from the database that fit the
@@ -15,7 +15,7 @@ gnt['geo'] = {};
     time -- the time the features was valid, also allowed '@now', '@all'
 
 */
-gnt.geo['get_features'] =
+gnt.geo.get_features =
 function(user, group, limit_params, ajax_params) {
     if(limit_params == undefined) {
         limit_params = "";
@@ -54,7 +54,7 @@ function(user, group, limit_params, ajax_params) {
  feature_id -- the id of the feature
 
 */
-gnt.geo['get_feature'] =
+gnt.geo.get_feature =
 function(user, group, feature_id, ajax_params) {
     if(limit_params == undefined) {
         limit_params = "";
@@ -105,7 +105,7 @@ function(user, group, feature_id, ajax_params) {
  "group" -- the group the feature belong to (read only)
  
 */
-gnt.geo['create_feature'] =
+gnt.geo.create_feature =
 function(user, group, feature, ajax_params) {
 
     var geojson_string = feature;
@@ -148,7 +148,7 @@ function(user, group, feature, ajax_params) {
  feature -- the features to be updated (check create for params)
  ajax_params -- extra ajax params for ajax call
 */
-gnt.geo['update_feature'] =
+gnt.geo.update_feature =
 function(user, group, feature, ajax_params) {
     var geojson_string = feature;
     var feature_id = '';
@@ -190,7 +190,7 @@ function(user, group, feature, ajax_params) {
  delete_feature, deletes one feature
  the feature has to have an id set to be deleted.
 */
-gnt.geo['delete_feature'] =
+gnt.geo.delete_feature =
 function(user, group, feature, ajax_params) {
     var geojson_string = feature;
     var feature_id = '';
@@ -227,3 +227,106 @@ function(user, group, feature, ajax_params) {
     $.ajax(kwargs);
 };
 
+/*
+ This function will create a property.
+ 
+ user -- the user the property belongs to, defaults to @me
+ group -- the group the property should be saved to defaults to @self
+ feature_id -- id of the feature the created property should belong to
+               if set as @null the property will not be connected to a feature
+ property -- A JSON of the key value pairs to save
+ ajax_params -- additional parameters to handle callbacks etc.
+ 
+*/
+gnt.geo.create_property = 
+function(user, group, feature_id, property, ajax_params) {
+    
+    var json_string = property;
+    
+    if( typeof(" ") !== typeof(geojson_string)) {
+        json_string = JSON.stringify(json_string);
+    }
+    
+    if(ajax_params === undefined) {
+        ajax_params = {};
+    }
+    if(user === undefined) {
+        user = '@me';
+    }
+    if(group === undefined) {
+        group = '@self';
+    }
+    if(feature_id === undefined) {
+        feature_id = '@null';
+    }
+    
+    var kwargs = $.extend(
+        ajax_params,
+        {
+            url: "{% url prop %}/" + user + "/" + group + "/" + feature_id,
+            type: "POST",
+            contentType: "application/json",
+            dataType: "json",
+            data: json_string,
+            beforeSend: function(xhr) {
+                xhr.withCredentials = true;
+            }
+        }
+    );
+
+    $.ajax(kwargs);
+};
+
+
+/*
+ This function will update a property.
+ 
+ user -- the user the property belongs to, defaults to @me
+ group -- the group the property should be saved to defaults to @self
+ feature_id -- id of the feature the updated property should belong to
+               if set as @null the property will not be connected to a feature
+ property -- A JSON of the key value pairs to update, requires an id field
+ ajax_params -- additional parameters to handle callbacks etc.
+ 
+*/
+gnt.geo.update_property = 
+function(user, group, feature_id, property, ajax_params) {
+    
+    if( typeof(" ") !== typeof(geojson_string)) {
+        property_id = property.id;
+        json_string = JSON.stringify(property);
+    } else {
+        // need to get the id of the feature
+        property_id = JSON.parse(property).id;
+        json_string = property;
+    }
+    
+    if(ajax_params === undefined) {
+        ajax_params = {};
+    }
+    if(user === undefined) {
+        user = '@me';
+    }
+    if(group === undefined) {
+        group = '@self';
+    }
+    if(feature_id === undefined) {
+        feature_id = '@null';
+    }
+    
+    var kwargs = $.extend(
+        ajax_params,
+        {
+            url: "{% url prop %}/" + user + "/" + group + "/" + feature_id + "/" + property_id,
+            type: "PUT",
+            contentType: "application/json",
+            dataType: "json",
+            data: json_string,
+            beforeSend: function(xhr) {
+                xhr.withCredentials = true;
+            }
+        }
+    );
+
+    $.ajax(kwargs);
+};
