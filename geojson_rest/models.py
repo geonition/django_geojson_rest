@@ -16,19 +16,22 @@ class Property(models.Model):
 
     feature -- geographical feature that this property belong to
     user -- the user that added this property
+    group -- the group the property belong to, should be the same as the
+             features that the property might be connected to
     json_data -- foreignkey to the json data model
     time -- foreignkey to the time model
     """
     user = models.ForeignKey(User)
-
+    group = models.CharField(default = '@self',
+                             max_length = 50)
+    
     json_data = models.OneToOneField(JSON)
     time = models.OneToOneField(TimeD)
 
-    def create(self, properties, user, *args, **kwargs):
+    def create(self, properties, *args, **kwargs):
         """
         This function saves properties of the feature,
         """
-        self.user = user
         js = JSON(json_string = json.dumps(properties),
                   collection = 'properties')
         js.save()
@@ -51,7 +54,9 @@ class Property(models.Model):
         retval = self.json_data.json()
         retval.update({'time': {'create_time': self.time.create_time.isoformat(),
                                 'expire_time': exrtime},
-                        'user': self.user.username})
+                        'user': self.user.username,
+                        'id': self.id,
+                        'group': self.group })
         return retval
 
     class Meta:
@@ -103,8 +108,9 @@ class Feature(gismodels.Model):
         timed = TimeD()
         timed.save()
         self.time = timed
-        prop = Property()
-        prop.create(feature['properties'], self.user)
+        prop = Property(user = self.user,
+                        group = self.group)
+        prop.create(feature['properties'])
         super(Feature, self).save(*args, **kwargs)
         self.properties.add(prop)
 

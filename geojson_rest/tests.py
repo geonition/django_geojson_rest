@@ -15,10 +15,10 @@ class GeoRESTTest(TestCase):
         self.client = Client()
 
         #setup a testuser
-        self.user1 = User.objects.create_user('user1','', 'passwd')
-        self.user2 = User.objects.create_user('user2','', 'passwd')
-        self.user3 = User.objects.create_user('user3','', 'passwd')
-        self.user4 = User.objects.create_user('user4','', 'passwd')
+        self.user1 = User.objects.create_user('user1', '', 'passwd')
+        self.user2 = User.objects.create_user('user2', '', 'passwd')
+        self.user3 = User.objects.create_user('user3', '', 'passwd')
+        self.user4 = User.objects.create_user('user4', '', 'passwd')
         
         self.base_feature = {
             'type': 'Feature',
@@ -52,10 +52,12 @@ class GeoRESTTest(TestCase):
         
         response_json = json.loads(response.content)
         #returned feature should include id
-        self.assertContains(response,
-                            '"id"',
-                            count = 1,
-                            status_code = 201)
+        response_dict = json.loads(response.content)
+        self.assertTrue(response_dict.has_key('id'),
+                        'The response feature did not have a key')
+        self.assertEquals(response.status_code,
+                          201,
+                          'The response was not a 201 created')
         self.assertTrue(response_json['private'],
                         'The feature returned did not include a private key')
         
@@ -200,6 +202,92 @@ class GeoRESTTest(TestCase):
                           'the feature was not deleted')
         
     def test_create_and_get_property(self):
+        #login to the service
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+        
         #get not existing property
-        pass
+        response = self.client.get(reverse('prop') + '/@me/test_group/3/500')
+        
+        self.assertEquals(response.status_code,
+                          404,
+                          "Querying a non existing feature did not return 404")
+       
+        #create a feature with property to group @self and user @me
+        new_feature = self.base_feature
+        new_feature.update({'properties': {'first': False}})
+        response = self.client.post(reverse('feat'),
+                                    json.dumps(new_feature),
+                                    content_type = 'application/json')        
+        self.assertEquals(response.status_code,
+                          201,
+                          "Creating a feature did not return a 201 created")
+        feature_id = json.loads(response.content)['id']
+        property_id = json.loads(response.content)['properties']['id']
+        
+        #query property saved with feature
+        response = self.client.get('%s/@me/@self/%i/%i' % (reverse('prop'),
+                                                           feature_id,
+                                                           property_id))
+        self.assertEquals(response.status_code,
+                          200,
+                          "Querying a property did not return status code 200")
+        self.assertEquals(json.loads(response.content)['group'],
+                          '@self',
+                          'The property did not belong to @self group')
+                          
+        
+        #create property without feature to group 'test_group'
+        response = self.client.post(reverse('prop') + '/@me/test_group/@null',
+                                    json.dumps({'key': 'first saved'}),
+                                    content_type = 'application/json')   
+        self.assertEquals(response.status_code,
+                          201,
+                          "Creating a property did not return a 201 created")
+        
+        property_id = json.loads(response.content)['id']
+        
+        #query property saved without feature
+        response = self.client.get('%s/@me/test_group/@null/%i' % (reverse('prop'),
+                                                                   property_id))
+        self.assertEquals(response.status_code,
+                          200,
+                          "Querying a property did not return status code 200")
+        self.assertEquals(json.loads(response.content)['group'],
+                          'test_group',
+                          'The property did not belong to test_group group')
+        
+        #query all user1 properties
+        response = self.client.get('%s/user1' % reverse('prop'))
+        self.assertTrue(json.loads(response.content).has_key('totalResults'),
+                        'The returned collection did not have key totalResults')
+        self.assertTrue(json.loads(response.content).has_key('entry'),
+                        'The returned collection did not have key entry')
+        
+        #update property
+        update_to_values = {'hello': 'world'}
+        response = self.client.put('%s/@me/test_group/@null/%i' % (reverse('prop'),
+                                                                   property_id),
+                                   json.dumps(update_to_values),
+                                   content_type = "application/json"
+                                   )
+        
+        self.assertTrue(json.loads(response.content).has_key('hello'),
+                        'A key was not found in updated property')
+        
+        #delete property
+        response = self.client.delete('%s/@me/test_group/@null/%i' % (reverse('prop'),
+                                                                      property_id))
+        
+        self.assertEquals(response.status_code,
+                          200,
+                          'Deleting a feature did not return 200 OK')
+        
+        #get property and check that it does not exist
+        response = self.client.get('%s/@me/test_group/@null/%i' % (reverse('prop'),
+                                                                   property_id))
+        
+        self.assertEquals(response.status_code,
+                          404,
+                          'Querying a deleted property did not return not found')
         
