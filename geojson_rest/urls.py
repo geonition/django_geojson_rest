@@ -35,10 +35,10 @@ urlpatterns = patterns('geojson_rest.views',
     (r'^prop/(?P<user>@?[-+_\w\.]+)/(?P<group>@?[-+_\w]+)$',
     PropertyView.as_view()),
 
-    (r'^prop/(?P<user>@?[-+_\w\.]+)/(?P<group>@?[-+_\w]+)/(?P<feature>@?\d+|@null)$',
+    (r'^prop/(?P<user>@?[-+_\w\.]+)/(?P<group>@?[-+_\w]+)/(?P<feature>@?\d+|@null|@all)$',
     PropertyView.as_view()),
 
-    (r'^prop/(?P<user>@?[-+_\w\.]+)/(?P<group>@?[-+_\w]+)/(?P<feature>@?\d+|@null)/(?P<property>@?\d+)$',
+    (r'^prop/(?P<user>@?[-+_\w\.]+)/(?P<group>@?[-+_\w]+)/(?P<feature>@?\d+|@null|@all)/(?P<property>@?\d+|@all)$',
     PropertyView.as_view()),
 
 )

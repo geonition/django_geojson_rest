@@ -134,7 +134,7 @@ class PropertyView(RequestHandler):
         
         #query the most restrictive first
         properties = Property.objects.all()
-        if property != None:
+        if property != None and property != '@all':
             properties = properties.filter(id = property)
         
         if user == '@me':

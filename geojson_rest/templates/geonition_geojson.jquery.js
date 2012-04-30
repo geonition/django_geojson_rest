@@ -330,3 +330,45 @@ function(user, group, feature_id, property, ajax_params) {
 
     $.ajax(kwargs);
 };
+
+/*
+get properties
+
+*/
+gnt.geo.get_properties = function(user,
+                                  group,
+                                  feature_id,
+                                  property_id,
+                                  ajax_params) {
+    
+    if(ajax_params === undefined) {
+        ajax_param = {};
+    }
+    
+    if(user === undefined) {
+        user = '@all';
+    }
+    if(group === undefined) {
+        group = '@all';
+    }
+    if(feature_id === undefined) {
+        feature_id = '@all';
+    }
+    if(property_id === undefined) {
+        property_id = '@all';
+    }
+    
+    var kwargs = $.extend(
+        ajax_params,
+        {
+            url: "{% url prop %}/" + user + "/" + group + "/" + feature_id + "/" + property_id,
+            type: "GET",
+            contentType: "application/json",
+            dataType: "json",
+            beforeSend: function(xhr) {
+                xhr.withCredentials = true;
+            }
+        }
+    );
+    $.ajax(kwargs);
+};
