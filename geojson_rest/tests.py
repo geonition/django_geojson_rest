@@ -33,7 +33,7 @@ class GeoRESTTest(TestCase):
             'features': []
         }
         
-    def test_create_and_get(self):
+    def test_create_and_get_feature(self):
         #login the user
         self.client.login(username = 'user1',
                           password = 'passwd')
@@ -131,7 +131,7 @@ class GeoRESTTest(TestCase):
             self.assertFalse(feat['private'],
                              'Querying all returned private features')
             
-    def test_update_and_get(self):
+    def test_update_and_get_feature(self):
         self.client.login(username = 'user1',
                           password = 'passwd')
         
@@ -168,7 +168,7 @@ class GeoRESTTest(TestCase):
         
         self.assertFalse(response_json['features'][0]['properties']['first'])
         
-    def test_create_and_delete(self):
+    def test_create_and_delete_feature(self):
         self.client.login(username = 'user1',
                           password = 'passwd')
         
@@ -198,4 +198,8 @@ class GeoRESTTest(TestCase):
         self.assertEquals(len(response_json['features']),
                           0,
                           'the feature was not deleted')
+        
+    def test_create_and_get_property(self):
+        #get not existing property
+        pass
         

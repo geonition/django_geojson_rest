@@ -127,3 +127,8 @@ class FeatureView(RequestHandler):
             user = User.objects.get(username = username)
         
         return user
+    
+class PropertyView(RequestHandler):
+    
+    def get(self, request):
+        return HttpResponse("")
