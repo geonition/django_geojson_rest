@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 setup(
     name='geojson_rest',
-    version='4.0.0',
+    version='4.1.0',
     author='Kristoffer Snabb',
     url='https://github.com/geonition/django_geojson_rest',
     packages=find_packages(),
@@ -14,7 +14,11 @@ setup(
             "templates/*.html"
         ],
     },
-    zip_safe=False,
     install_requires=['django',
-                      'psycopg2']
+                      'psycopg2',
+                      'geonition_utils'],
+    dependency_links = [
+        'https://github.com/geonition/django_geonition_utils/tarball/4.0.1#egg=geonition_utils-4.0.1'
+        ],
+    zip_safe=False
 )

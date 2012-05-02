@@ -136,10 +136,12 @@ class PropertyView(RequestHandler):
         properties = Property.objects.all()
         if property != None and property != '@all':
             properties = properties.filter(id = property)
-        
-        if user == '@me':
+            
+        if user == '@me' and request.user.is_authenticated():
             user = get_user(request, user)
             properties = properties.filter(user = user)
+        elif user == '@me':
+            return HttpResponseBadRequest("The user @me is not authenticated")
             
         if len(properties) == 0:
             return HttpResponseNotFound("The property you queried was not found")
