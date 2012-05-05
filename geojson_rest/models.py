@@ -61,6 +61,9 @@ class Property(models.Model):
                         'group': self.group })
         return retval
 
+    def __unicode__(self):
+        return u'%i %s %s' % (self.id, self.group, self.user)
+        
     class Meta:
         unique_together = ('json_data', 'user', 'time')
 
@@ -176,3 +179,6 @@ class Feature(gismodels.Model):
         }
 
         return json_obj
+    
+    def __unicode__(self):
+        return u'%i %s %s' % (self.id, self.group, self.user)
