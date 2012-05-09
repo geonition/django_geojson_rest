@@ -7,6 +7,7 @@ from geonition_utils.http import HttpResponse
 from geonition_utils.http import HttpResponseBadRequest
 from geonition_utils.http import HttpResponseCreated
 from geonition_utils.http import HttpResponseNotFound
+from geonition_utils.http import HttpResponseUnauthorized
 from geonition_utils.views import RequestHandler
 from models import Feature
 from models import Property
@@ -19,35 +20,54 @@ class FeatureView(RequestHandler):
             group = '@self',
             feature = None):
         
+        #do not do anything if user has not created a session
+        if not request.user.is_authenticated():
+            return HttpResponseUnauthorized("The request has to be made by a"
+                                            "signed in user")
+            
+        #take initial all
+        features = Feature.objects.all()
+        print features
+        print user
+        print group
+        print feature
+        #filter the ones that has feature_id feature
         if feature != None:
-            features = Feature.objects.filter(id = feature)
+            features = features.filter(id = feature)
+        
+        #filter the ones that belong to the group
+        if group != '@all':
+            features = features.filter(group = group)
+        
+        #filter the ones that belong to the user
+        if user != '@all' and user != '@others':
+            user_obj = get_user(request, username = user)
+        
+            if user != '@me':
             
-        elif user != '@all' and group != '@all':
-            user = get_user(request, username = user)
-            if user == request.user:
-                features = Feature.objects.filter(user = user,
-                                                  group = group)
-            else:
-                own_features = Feature.objects.filter(user = request.user,
-                                                      group = group)
-                others_features = Feature.objects.filter(user = user,
-                                                         group = group,
-                                                         private = False)
-                features = own_features | others_features
+                if request.user != user_obj:
+                    features = features.filter(user = user_obj,
+                                               private = False)
+                else:
+                    feature = features.filter(user = user_obj)
                 
-        elif user == '@all' and group != '@all':
-            features = Feature.objects.filter(group = group,
-                                             private = False)
-        elif user != '@all' and group == '@all':
-            user = self.get_user(request, username = user)
-            if user == request.user:
-                features = Feature.objects.filter(user = user)
             else:
-                features = Feature.objects.filter(user = user,
-                                                 private = False)
-        else:
-            features = Feature.objects.filter(private = False)
+                feature = features.filter(user = user_obj)  
+        
+        elif user == '@others':
+            features = features.filter(private = False)
+            features = features.exclude(user = request.user)
             
+        else: # user is @all
+            print user
+            print features
+            own_features = features.filter(user = request.user)
+            print own_features
+            others_features = features.filter(private = False)
+            print others_features
+            others_features = others_features.exclude(user = request.user)
+            features = own_features | others_features
+                
         
         if len(features) > 0:
             srid = features[0].geometry.srid

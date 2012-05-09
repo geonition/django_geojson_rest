@@ -123,15 +123,15 @@ class GeoRESTTest(TestCase):
                               2,
                               'Querying all features returned not private features')
         
-        #logout
-        self.client.logout()
-        
         #query all features should include all except private features
-        response = self.client.get(reverse('feat') + '/@all/@all')
+        response = self.client.get(reverse('feat') + '/@others/@all')
         response_json = json.loads(response.content)
         for feat in response_json['features']:
             self.assertFalse(feat['private'],
                              'Querying all returned private features')
+            
+        #logout
+        self.client.logout()
             
     def test_update_and_get_feature(self):
         self.client.login(username = 'user1',
