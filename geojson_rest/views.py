@@ -27,10 +27,7 @@ class FeatureView(RequestHandler):
             
         #take initial all
         features = Feature.objects.all()
-        print features
-        print user
-        print group
-        print feature
+        
         #filter the ones that has feature_id feature
         if feature != None:
             features = features.filter(id = feature)
@@ -59,12 +56,8 @@ class FeatureView(RequestHandler):
             features = features.exclude(user = request.user)
             
         else: # user is @all
-            print user
-            print features
             own_features = features.filter(user = request.user)
-            print own_features
             others_features = features.filter(private = False)
-            print others_features
             others_features = others_features.exclude(user = request.user)
             features = own_features | others_features
                 

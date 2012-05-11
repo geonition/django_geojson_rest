@@ -92,7 +92,7 @@ class GeoRESTTest(TestCase):
                          'The response of creating was not private false')
         
         #create not private feature to group test2
-        new_feature.update({'private': False})
+        new_feature.update({'private': True})
         response = self.client.post(reverse('feat') + '/@me/test2',
                                     json.dumps(new_feature),
                                     content_type = 'application/json')
@@ -122,6 +122,9 @@ class GeoRESTTest(TestCase):
         self.assertEquals(len(response_json['features']),
                               2,
                               'Querying all features returned not private features')
+        
+        self.client.logout()
+        self.client.login(username = 'user1', password = 'passwd')
         
         #query all features should include all except private features
         response = self.client.get(reverse('feat') + '/@others/@all')
