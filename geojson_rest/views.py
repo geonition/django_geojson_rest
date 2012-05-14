@@ -46,10 +46,10 @@ class FeatureView(RequestHandler):
                     features = features.filter(user = user_obj,
                                                private = False)
                 else:
-                    feature = features.filter(user = user_obj)
+                    features = features.filter(user = user_obj)
                 
             else:
-                feature = features.filter(user = user_obj)  
+                features = features.filter(user = user_obj)  
         
         elif user == '@others':
             features = features.filter(private = False)
