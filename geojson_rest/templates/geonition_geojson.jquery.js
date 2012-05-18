@@ -332,7 +332,14 @@ function(user, group, feature_id, property, ajax_params) {
 };
 
 /*
-get properties
+This function gets properties.
+
+ user -- the user the property belongs to, defaults to @all
+ group -- the group the property should be queried from. defaults to @all
+ feature_id -- id of the feature the updated property should belong to.
+               if set as @null the property will not be connected to a feature
+ property -- A JSON of the key value pairs to update, requires an id field
+ ajax_params -- additional parameters to handle callbacks etc.
 
 */
 gnt.geo.get_properties = function(user,
