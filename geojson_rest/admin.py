@@ -11,6 +11,7 @@ class FeatureAdmin(admin.ModelAdmin):
                         'private',
                         'properties',
                         'time')
+    list_filter = ('group', 'private', )
     
 
 class PropertyAdmin(admin.ModelAdmin):
@@ -18,6 +19,7 @@ class PropertyAdmin(admin.ModelAdmin):
                        'group',
                        'json_data',
                        'time')
+    list_filter = ('group',)
     
 admin.site.register(Feature, FeatureAdmin)
 admin.site.register(Property, PropertyAdmin)
