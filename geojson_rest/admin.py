@@ -56,6 +56,7 @@ class PropertyAdmin(admin.ModelAdmin):
                        'json_data',
                        'time')
     list_filter = ('group', HasFeatureFilter, )
+    actions = [json_to_csv]
 
 
 admin.site.register(Feature, FeatureAdmin)

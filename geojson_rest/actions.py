@@ -31,7 +31,11 @@ def json_to_csv(modeladmin, request, queryset):
         for selector in selector_list:
             sel = selector.split('.')
             for s in sel:
-                value = value[s]
+                try:
+                    value = value[s]
+                except KeyError:
+                    value = u''
+                    
                 
             values.append(unicode(value).encode('utf-8'))
             value = dict_json
