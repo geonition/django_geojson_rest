@@ -1,3 +1,4 @@
+from actions import get_selectors
 from datetime import datetime
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
@@ -294,3 +295,16 @@ class GeoRESTTest(TestCase):
                           404,
                           'Querying a deleted property did not return not found')
         
+        
+    def test_json_to_csv(self):
+        tlist = [{'hello': 'world',
+                  'list': ['a','b'],
+                    'dict': {'hello': 'world',
+                             'goodbye': 'world'}}]
+        selector_list = get_selectors(tlist)
+        self.assertEquals(selector_list,
+                          ['dict.hello',
+                           'dict.goodbye',
+                           'list',
+                           'hello'],
+                          "The selector list was not what it should have been")

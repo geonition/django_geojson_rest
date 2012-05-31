@@ -1,3 +1,4 @@
+from actions import json_to_csv
 from django.conf import settings
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
@@ -46,6 +47,7 @@ class FeatureAdmin(admin.ModelAdmin):
                         'properties',
                         'time')
     list_filter = ('group', 'private', )
+    actions = [json_to_csv]
     
 
 class PropertyAdmin(admin.ModelAdmin):
