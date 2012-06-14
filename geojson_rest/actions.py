@@ -2,8 +2,9 @@ import csv
 import json
 import types
 from django.http import HttpResponse
+from django.utils.translation import ugettext_lazy as _
 
-def json_to_csv(modeladmin, request, queryset):
+def download_csv(modeladmin, request, queryset):
     """
     This action will modify the queryset objects into
     csv for downloading. The queryset objects is required
@@ -45,7 +46,8 @@ def json_to_csv(modeladmin, request, queryset):
             
     return response
 
-    
+download_csv.short_description = _(u'Download selected as a csv file')
+
 def get_selectors(json_list):
     """
     This function takes a list of dictionaries and
