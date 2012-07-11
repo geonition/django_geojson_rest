@@ -10,6 +10,9 @@ def download_csv(modeladmin, request, queryset):
     csv for downloading. The queryset objects is required
     to have their own .to_json() function which will provide
     the json representation of that object.
+    
+    Special reserved values include
+    geometry - should represent a geojson geometry otherwise skipped
     """
     #make the response object to write to
     response = HttpResponse(mimetype='text/csv')
@@ -31,12 +34,12 @@ def download_csv(modeladmin, request, queryset):
         values = []
         for selector in selector_list:
             sel = selector.split('.')
+            
             for s in sel:
                 try:
                     value = value[s]
                 except KeyError:
                     value = u''
-                    
                 
             values.append(unicode(value).encode('utf-8'))
             value = dict_json
@@ -46,21 +49,25 @@ def download_csv(modeladmin, request, queryset):
             
     return response
 
-download_csv.short_description = _(u'Download selected as a csv file')
+download_csv.short_description = _(u'Download as a csv file')
 
 def get_selectors(json_list):
     """
     This function takes a list of dictionaries and
     calculates the keys to query all the values.
+    
+    Special reserved values include
+    geometry - should represent a geojson geometry otherwise skipped
     """
     key_selectors = []
     
     for obj in json_list:
         keys = obj.keys()
         for key in keys:
+            
             key_selector = "%s" % key
             
-            if type(obj[key]) == types.DictType:
+            if type(obj[key]) == types.DictType and key != 'geometry':
                 subkeys = get_selectors([obj[key]])
                 for subkey in subkeys:
                     subkey_selector = "%s.%s" % (key_selector, subkey)
