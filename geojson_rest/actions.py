@@ -1,8 +1,13 @@
+"""
+This file contains admin actions used by the geojson_rest application
+"""
 import csv
 import json
 import types
+from django.contrib.gis.geos import GEOSGeometry
 from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
+
 
 def download_csv(modeladmin, request, queryset):
     """
@@ -33,13 +38,18 @@ def download_csv(modeladmin, request, queryset):
         value = dict_json
         values = []
         for selector in selector_list:
-            sel = selector.split('.')
             
-            for s in sel:
-                try:
-                    value = value[s]
-                except KeyError:
-                    value = u''
+            #handle the geometry geojson and present it as WKT
+            if selector == 'geometry':
+                value = GEOSGeometry(json.dumps(value[selector])).wkt
+            else:   
+                split_selector = selector.split('.')
+            
+                for part_selector in split_selector:
+                    try:
+                        value = value[part_selector]
+                    except KeyError:
+                        value = u''
                 
             values.append(unicode(value).encode('utf-8'))
             value = dict_json
@@ -67,7 +77,7 @@ def get_selectors(json_list):
             
             key_selector = "%s" % key
             
-            if type(obj[key]) == types.DictType and key != 'geometry':
+            if key != 'geometry' and type(obj[key]) == types.DictType:
                 subkeys = get_selectors([obj[key]])
                 for subkey in subkeys:
                     subkey_selector = "%s.%s" % (key_selector, subkey)
