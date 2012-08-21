@@ -49,6 +49,9 @@ class FeatureAdmin(admin.ModelAdmin):
     list_filter = ('group', 'private', )
     actions = [download_csv]
     
+    def __str__(self):
+        return "Feature"
+    
 
 class PropertyAdmin(admin.ModelAdmin):
     readonly_fields = ('user',
@@ -58,6 +61,8 @@ class PropertyAdmin(admin.ModelAdmin):
     list_filter = ('group', HasFeatureFilter, )
     actions = [download_csv]
 
+    def __str__(self):
+        return "Property"
 
 admin.site.register(Feature, FeatureAdmin)
 admin.site.register(Property, PropertyAdmin)

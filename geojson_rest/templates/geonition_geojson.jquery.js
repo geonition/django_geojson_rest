@@ -1,7 +1,7 @@
 /*
  javascript functions for the geojson_rest app
 */
-gnt.app_version.geojson_rest = '5.0.0';
+gnt.app_version.geojson_rest = '5.2.2';
 gnt.geo = {};
 
 /*

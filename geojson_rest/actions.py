@@ -21,7 +21,7 @@ def download_csv(modeladmin, request, queryset):
     """
     #make the response object to write to
     response = HttpResponse(mimetype='text/csv')
-    response['Content-Disposition'] = 'attachment; filename=features.csv'
+    response['Content-Disposition'] = 'attachment; filename=%s.csv' % str(modeladmin)
     
     #create a csv writer
     writer = csv.writer(response)
