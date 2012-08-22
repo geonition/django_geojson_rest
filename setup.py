@@ -11,7 +11,8 @@ setup(
     package_data = {
         "geojson_rest": [
             "templates/*.js",
-            "templates/*.html"
+            "templates/*.html",
+            "templates/admin/geojson_rest/feature/view_features.html"
         ],
     },
     install_requires=['django',

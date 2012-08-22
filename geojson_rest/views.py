@@ -72,6 +72,7 @@ class FeatureView(RequestHandler):
             'features': [feat.to_json() for feat in features],
             'crs': {"type": "EPSG", "properties": {"code": srid}}
         }
+        
         return HttpResponse(json.dumps(featurecollection))
         
     def post(self,

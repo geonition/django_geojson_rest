@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.contrib.gis.db import models as gismodels
 from django.contrib.gis.gdal import OGRGeometry
@@ -180,5 +181,8 @@ class Feature(gismodels.Model):
 
         return json_obj
     
+    def get_absolute_url(self):
+        return '%s/@all/@all/%i' % (reverse('feat'), self.id)
+        
     def __unicode__(self):
         return u'%i %s %s' % (self.id, self.group, self.user)
