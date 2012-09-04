@@ -66,11 +66,11 @@ class FeatureView(RequestHandler):
             srid = features[0].geometry.srid
         else:
             srid = getattr(settings, "SPATIAL_REFERENCE_SYSTEM_ID", 4326)
-        
+            
         featurecollection = {
             'type': 'FeatureCollection',
             'features': [feat.to_json() for feat in features],
-            'crs': {"type": "EPSG", "properties": {"code": srid}}
+            'crs': {"type": "name", "properties": {"code": "EPSG:%i" % srid}}
         }
         
         return HttpResponse(json.dumps(featurecollection))
