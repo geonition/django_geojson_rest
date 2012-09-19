@@ -69,7 +69,7 @@ class Property(models.Model):
         unique_together = ('json_data', 'user', 'time')
 
 
-class Feature(gismodels.Model):
+class FeatureBase(gismodels.Model):
     """
     This model represents a geographical feature.
 
@@ -80,7 +80,6 @@ class Feature(gismodels.Model):
     private -- tells the view if this is a private position which should not be shown to others
     time -- foreignkey to the time model
     """
-    geometry = gismodels.GeometryField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
     user = models.ForeignKey(User)
     group = models.CharField(default = '@self', max_length = 50)
     private = models.BooleanField(default = True)
@@ -88,60 +87,6 @@ class Feature(gismodels.Model):
     time = models.OneToOneField(TimeD)
 
     objects = gismodels.GeoManager()
-
-
-    def create(self, feature, *args, **kwargs):
-        """
-        This function creates a feature which is a
-        python dict representation of a geojson object.
-
-        The feature properties like create_time or
-        expire time should be given in the feature object
-        e.g.
-        {
-        "type": "Feature",
-        "geometry": ...,
-        "properties": ...,
-        "id": ...,
-        "private": ...,
-        "time": ...,
-        "user": ...,
-        "group": ...
-        }
-        """
-        self.geometry = OGRGeometry(json.dumps(feature['geometry'])).geos
-        self.private = feature.get('private', True)
-        timed = TimeD()
-        timed.save()
-        self.time = timed
-        prop = Property(user = self.user,
-                        group = self.group)
-        prop.create(feature['properties'])
-        super(Feature, self).save(*args, **kwargs)
-        self.properties.add(prop)
-
-    def update(self, feature, user, *args, **kwargs):
-        """
-        This function updates the feature, user indicates
-        the user updating the feature.
-
-        only some values can be updated:
-        private -- can be updated by the creator of the feature
-        properties -- can be updated by all (saved separate per user)
-        """
-        if self.user == user:
-            self.private = feature.get('private', True)
-            old_property = self.properties.get(user = user)
-            old_property.update(feature['properties'])
-            self.save(*args, **kwargs)
-        else:
-            try:
-                old_property = self.properties.get(user = user)
-                old_property.update(feature['properties'])
-            except Property.DoesNotExist:
-                prop = Property()
-                prop.create(feature['properties'], user)
-                self.properties.add(prop)
 
     def get_properties(self):
         """
@@ -186,3 +131,114 @@ class Feature(gismodels.Model):
         
     def __unicode__(self):
         return u'%i %s %s' % (self.id, self.group, self.user)
+    
+    class Meta:
+        abstract = True
+    
+
+class Feature(FeatureBase):
+    """
+    this inherits form base and is the model
+    that should be used for crud functionality
+    """
+    geometry = gismodels.GeometryField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
+
+    def create(self, feature, *args, **kwargs):
+        """
+        This function creates a feature which is a
+        python dict representation of a geojson object.
+
+        The feature properties like create_time or
+        expire time should be given in the feature object
+        e.g.
+        {
+        "type": "Feature",
+        "geometry": ...,
+        "properties": ...,
+        "id": ...,
+        "private": ...,
+        "time": ...,
+        "user": ...,
+        "group": ...
+        }
+        """
+        #TODO do not use GDAL
+        self.geometry = OGRGeometry(json.dumps(feature['geometry'])).geos
+        self.private = feature.get('private', True)
+        timed = TimeD()
+        timed.save()
+        self.time = timed
+        prop = Property(user = self.user,
+                        group = self.group)
+        prop.create(feature['properties'])
+        super(Feature, self).save(*args, **kwargs)
+        self.properties.add(prop)
+
+    def update(self, feature, user, *args, **kwargs):
+        """
+        This function updates the feature, user indicates
+        the user updating the feature.
+
+        only some values can be updated:
+        private -- can be updated by the creator of the feature
+        properties -- can be updated by all (saved separate per user)
+        """
+        if self.user == user:
+            self.private = feature.get('private', True)
+            old_property = self.properties.get(user = user)
+            old_property.update(feature['properties'])
+            self.save(*args, **kwargs)
+        else:
+            try:
+                old_property = self.properties.get(user = user)
+                old_property.update(feature['properties'])
+            except Property.DoesNotExist:
+                prop = Property()
+                prop.create(feature['properties'], user)
+                self.properties.add(prop)
+
+#geometry models inherited form generic Feature
+class PointFeature(FeatureBase):
+    """
+    This model handle the point features
+    
+    This is a not managed database class and
+    requires a view to be made in the database.
+    The view creation sql is in the
+    sql/feature.sql file.
+    """
+    geometry = gismodels.PointField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
+    
+    class Meta:
+        managed = False
+        db_table = 'pointfeature'
+
+class LinestringFeature(FeatureBase):
+    """
+    This model handle the linestring features
+    
+    This is a not managed database class and
+    requires a view to be made in the database.
+    The view creation sql is in the
+    sql/feature.sql file.
+    """
+    geometry = gismodels.LineStringField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
+    
+    class Meta:
+        managed = False
+        db_table = 'linestringfeature'
+        
+class PolygonFeature(FeatureBase):
+    """
+    This model handle the polygon features
+    
+    This is a not managed database class and
+    requires a view to be made in the database.
+    The view creation sql is in the
+    sql/feature.sql file.
+    """
+    geometry = gismodels.PolygonField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
+    
+    class Meta:
+        managed = False
+        db_table = 'polygonfeature'

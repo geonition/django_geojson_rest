@@ -12,7 +12,8 @@ setup(
         "geojson_rest": [
             "templates/*.js",
             "templates/*.html",
-            "templates/admin/geojson_rest/feature/view_features.html"
+            "templates/admin/geojson_rest/feature/view_features.html",
+            "sql/*.sql"
         ],
     },
     install_requires=['django',

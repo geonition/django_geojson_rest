@@ -2,11 +2,15 @@ from actions import download_csv
 from django.conf import settings
 from django.conf.urls.defaults import patterns
 from django.contrib import admin
+from django.contrib.gis import admin as gisadmin
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils.translation import ugettext_lazy as _
-from models import Feature
-from models import Property
+from geojson_rest.models import Feature
+from geojson_rest.models import PointFeature
+from geojson_rest.models import LinestringFeature
+from geojson_rest.models import PolygonFeature
+from geojson_rest.models import Property
 import json
 
 class HasFeatureFilter(admin.SimpleListFilter):
@@ -46,44 +50,51 @@ class HasFeatureFilter(admin.SimpleListFilter):
 class FeatureAdmin(admin.ModelAdmin):
     search_fields = ('user', 'group',)
     list_display = ('user',
-                    'group',
-                    'view_geometry_link')
-    readonly_fields = ('geometry',
-                       'user',
+                    'group')
+    readonly_fields = ('user',
                        'group',
                        'private',
                        'properties',
                        'time')
     list_filter = ('group', 'private',)
     actions = [download_csv]
-    
-    def get_urls(self):
-        urls = super(FeatureAdmin, self).get_urls()
-        
-        extra_urls = patterns('',
-                            (r'^view_geometry$', self.admin_site.admin_view(self.view_geometry)),
-                            )
-        return extra_urls + urls
-    
-    def view_geometry_link(self, obj):
-        return '<a href="view_geometry?id=%d">view geometry</a>' % obj.id
-    
-    view_geometry_link.allow_tags = True
-        
-    def view_geometry(self, request):
-        feature_id = request.GET.get('id')
-        feature = Feature.objects.get(pk = feature_id)
-        feature_dict = feature.to_json()
-        feature_json = json.dumps(feature_dict)
-        return render_to_response('admin/geojson_rest/feature/view_features.html',
-                                  {'feature': feature,
-                                   'feature_json': feature_json,
-                                   'srid': getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326)},
-                                  context_instance = RequestContext(request))
+    modifiable = False
     
     def __str__(self):
         return "Feature"
+
+class PointFeatureAdmin(gisadmin.OSMGeoAdmin, FeatureAdmin):
+    """
+    This is subclass for FeatureAdmin but handles only
+    point geometries.
+    """
     
+    def queryset(self, request):
+        return self.model.objects.all()
+        
+admin.site.register(PointFeature, PointFeatureAdmin)
+
+class LinestringFeatureAdmin(gisadmin.OSMGeoAdmin, FeatureAdmin):
+    """
+    This is subclass for FeatureAdmin but handles only
+    linestring geometries.
+    """
+    
+    def queryset(self, request):
+        return self.model.objects.all()
+        
+admin.site.register(LinestringFeature, LinestringFeatureAdmin)
+
+class PolygonFeatureAdmin(gisadmin.OSMGeoAdmin, FeatureAdmin):
+    """
+    This is subclass for FeatureAdmin but handles only
+    polygon geometries.
+    """
+    
+    def queryset(self, request):
+        return self.model.objects.all()
+        
+admin.site.register(PolygonFeature, PolygonFeatureAdmin) 
 
 class PropertyAdmin(admin.ModelAdmin):
     list_display = ('group',
@@ -100,6 +111,5 @@ class PropertyAdmin(admin.ModelAdmin):
         return "Property"
     
 
-admin.site.register(Feature, FeatureAdmin)
 admin.site.register(Property, PropertyAdmin)
 

@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW PointFeature AS SELECT * FROM geojson_rest_feature WHERE GeometryType(geometry) = 'POINT';
