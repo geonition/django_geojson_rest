@@ -83,7 +83,7 @@ class FeatureBase(gismodels.Model):
     user = models.ForeignKey(User)
     group = models.CharField(default = '@self', max_length = 50)
     private = models.BooleanField(default = True)
-    properties = models.ManyToManyField(Property, related_name = 'feature')
+    properties = models.ManyToManyField(Property)
     time = models.OneToOneField(TimeD)
 
     objects = gismodels.GeoManager()
