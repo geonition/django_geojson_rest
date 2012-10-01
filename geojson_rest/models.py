@@ -83,8 +83,6 @@ class FeatureBase(gismodels.Model):
     user = models.ForeignKey(User)
     group = models.CharField(default = '@self', max_length = 50)
     private = models.BooleanField(default = True)
-    properties = models.ManyToManyField(Property,
-                                        db_table = 'geojson_rest_feature_properties')
     time = models.OneToOneField(TimeD)
 
     objects = gismodels.GeoManager()
@@ -143,6 +141,7 @@ class Feature(FeatureBase):
     that should be used for crud functionality
     """
     geometry = gismodels.GeometryField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
+    properties = models.ManyToManyField(Property)
 
     def create(self, feature, *args, **kwargs):
         """
@@ -209,10 +208,21 @@ class PointFeature(FeatureBase):
     sql/feature.sql file.
     """
     geometry = gismodels.PointField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
+    properties = models.ManyToManyField(Property,
+                                        through = 'PointFeatureProperty')
     
     class Meta:
         managed = False
         db_table = 'pointfeature'
+        
+#hack to handle manytomanyfields in database views and django ORM
+class PointFeatureProperty(models.Model):
+    feature = models.ForeignKey(PointFeature)
+    property = models.ForeignKey(Property)
+    
+    class Meta:
+        managed = False
+        db_table = 'pointfeatureproperty'
 
 class LinestringFeature(FeatureBase):
     """
@@ -224,10 +234,21 @@ class LinestringFeature(FeatureBase):
     sql/feature.sql file.
     """
     geometry = gismodels.LineStringField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
+    properties = models.ManyToManyField(Property,
+                                        through = 'LinestringFeatureProperty')
     
     class Meta:
         managed = False
         db_table = 'linestringfeature'
+
+#hack to handle manytomanyfields in database views and django ORM
+class LinestringFeatureProperty(models.Model):
+    feature = models.ForeignKey(LinestringFeature)
+    property = models.ForeignKey(Property)
+    
+    class Meta:
+        managed = False
+        db_table = 'linestringfeatureproperty'
         
 class PolygonFeature(FeatureBase):
     """
@@ -239,7 +260,18 @@ class PolygonFeature(FeatureBase):
     sql/feature.sql file.
     """
     geometry = gismodels.PolygonField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
+    properties = models.ManyToManyField(Property,
+                                        through = 'PolygonFeatureProperty')
     
     class Meta:
         managed = False
         db_table = 'polygonfeature'
+        
+#hack to handle manytomanyfields in database views and django ORM
+class PolygonFeatureProperty(models.Model):
+    feature = models.ForeignKey(PolygonFeature)
+    property = models.ForeignKey(Property)
+    
+    class Meta:
+        managed = False
+        db_table = 'polygonfeatureproperty'
