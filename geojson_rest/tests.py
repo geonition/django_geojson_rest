@@ -8,6 +8,7 @@ from django.test.utils import override_settings
 from django.utils import simplejson as json
 from models import Feature
 from time import sleep
+from django.utils.unittest import skip
 
 @override_settings(SPATIAL_REFERENCE_SYSTEM_ID = 4326)
 class GeoRESTTest(TestCase):
@@ -33,7 +34,126 @@ class GeoRESTTest(TestCase):
             'type': 'FeatureCollection',
             'features': []
         }
+
+    @skip('There are bugs in the tests')    
+    def test_unauthorized_get(self):
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
         
+        #make a new public feature to save
+        new_feature = self.base_feature
+        new_feature.update({'private': False})
+        response = self.client.post(reverse('feat'),
+                                    json.dumps(new_feature),
+                                    content_type = 'application/json')
+        
+        response_dict = json.loads(response.content)
+        id = response_dict['id']
+        self.client.logout()
+        
+        #try to get a feature
+        response = self.client.get(reverse('feat') + "/@me/@self/" + str(id))
+        self.assertEquals(response.status_code,
+                          401,
+                          'The response was not a 401, not signed in user could get a public feature')
+        
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+        
+        #make a new private feature to save
+        new_feature = self.base_feature
+        response = self.client.post(reverse('feat'),
+                                    json.dumps(new_feature),
+                                    content_type = 'application/json')
+        
+        response_dict = json.loads(response.content)
+        id = response_dict['id']
+
+        self.client.logout()
+        
+        self.client.login(username = 'user2',
+                          password = 'passwd')
+        
+        response = self.client.get(reverse('feat') + '/user2/@self/' + str(id))
+#        self.assertEquals(response.status_code,
+#                          404,
+#                          'The response was not a 404 as in documentation')
+        response_json = json.loads(response.content)
+        self.assertEquals(len(response_json['features']),
+                          0,
+                          'Querying another user private feature returned feature')
+        
+        #Query all user1 public features
+        response = self.client.get(reverse('feat') + '/user1')
+        self.assertEquals(response.status_code,
+                          200,
+                          'The response was not a 200')
+        
+        response_json = json.loads(response.content)
+        self.assertEqual(len(response_json['features']),
+                          1,
+                          'Querying all public features did not return any')
+
+        #make a new private feature to save
+        new_feature = self.base_feature
+        #save feature for user @test
+        response = self.client.post(reverse('feat' + '/user2'),
+                                    json.dumps(new_feature),
+                                    content_type = 'application/json')
+        
+        response_dict = json.loads(response.content)
+        id = response_dict['id']
+
+        #try to get that feature
+        response = self.client.get(reverse('feat') + '/user2/@self/' + str(id))
+        self.assertEquals(response.status_code,
+                          200,
+                          'The response was not a 200')
+        
+        response_json = json.loads(response.content)
+        self.assertEquals(len(response_json['features']),
+                          1,
+                          'Querying user user2 features did not return any')
+
+    def test_delete_other_users_feature(self):
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+        
+        #make a new public feature to save
+        new_feature = self.base_feature
+        new_feature.update({'private': False})
+        new_feature.update({'properties':{'deleteTest': True}})
+        response = self.client.post(reverse('feat'),
+                                    json.dumps(new_feature),
+                                    content_type = 'application/json')
+        
+        response_dict = json.loads(response.content)
+        id = response_dict['id']
+        self.client.logout()
+        
+        #try to get a feature
+        print("TEST_DELETE")
+        response = self.client.delete(reverse('feat') + '/@me/@self/' + str(id))
+        self.assertEqual(response.status_code,
+                          403,
+                          'The response was not a 403, other users public feature might be deleted by not signed in user')
+        
+#        self.assertNotEqual(response.content, 
+#                            "A feature was deleted",
+#                            "A feature was really deleted" )
+
+        #login the user1 back to check if feature was really deleted
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+
+        response = self.client.get(reverse('feat'))
+        response_json = json.loads(response.content)
+        self.assertEqual(len(response_json['features']),
+                          1,
+                          'Trying to delete other users feature did actually delete the feature')
+            
     def test_create_and_get_feature(self):
         #login the user
         self.client.login(username = 'user1',
