@@ -9,6 +9,7 @@ from django.utils import simplejson as json
 from models import Feature
 from time import sleep
 from django.utils.unittest import skip
+import copy
 
 @override_settings(SPATIAL_REFERENCE_SYSTEM_ID = 4326)
 class GeoRESTTest(TestCase):
@@ -34,15 +35,25 @@ class GeoRESTTest(TestCase):
             'type': 'FeatureCollection',
             'features': []
         }
-
-    @skip('There are bugs in the tests')    
+    
+    # helper functions to return a new feature and new feature_collection
+    def create_feature(self, prop_dict=None):
+        new_feat = copy.deepcopy(self.base_feature)
+        if prop_dict != None:
+            new_feat['properties'] = prop_dict
+        return new_feat
+    
+    def create_feature_collection(self):
+        return copy.deepcopy(self.base_featurecollection)
+    
+#    @skip("Skipped to hasten test development") 
     def test_unauthorized_get(self):
         #login the user
         self.client.login(username = 'user1',
                           password = 'passwd')
         
         #make a new public feature to save
-        new_feature = self.base_feature
+        new_feature = self.create_feature()
         new_feature.update({'private': False})
         response = self.client.post(reverse('feat'),
                                     json.dumps(new_feature),
@@ -62,7 +73,8 @@ class GeoRESTTest(TestCase):
                           password = 'passwd')
         
         #make a new private feature to save
-        new_feature = self.base_feature
+        new_feature = self.create_feature()
+        new_feature['geometry']['coordinates'] = [10,10]
         response = self.client.post(reverse('feat'),
                                     json.dumps(new_feature),
                                     content_type = 'application/json')
@@ -89,16 +101,19 @@ class GeoRESTTest(TestCase):
         self.assertEquals(response.status_code,
                           200,
                           'The response was not a 200')
-        
+
         response_json = json.loads(response.content)
-        self.assertEqual(len(response_json['features']),
-                          1,
+        self.assertNotEqual(len(response_json['features']),
+                          0,
                           'Querying all public features did not return any')
 
+        self.assertNotEqual(len(response_json['features']),
+                          2,
+                          'Querying all public features returned also private features')
         #make a new private feature to save
-        new_feature = self.base_feature
+        new_feature = self.create_feature()
         #save feature for user @test
-        response = self.client.post(reverse('feat' + '/user2'),
+        response = self.client.post(reverse('feat') + '/user2',
                                     json.dumps(new_feature),
                                     content_type = 'application/json')
         
@@ -116,13 +131,14 @@ class GeoRESTTest(TestCase):
                           1,
                           'Querying user user2 features did not return any')
 
+#    @skip("These won't pass")  
     def test_delete_other_users_feature(self):
         #login the user
         self.client.login(username = 'user1',
                           password = 'passwd')
         
         #make a new public feature to save
-        new_feature = self.base_feature
+        new_feature = self.create_feature()
         new_feature.update({'private': False})
         new_feature.update({'properties':{'deleteTest': True}})
         response = self.client.post(reverse('feat'),
@@ -134,7 +150,6 @@ class GeoRESTTest(TestCase):
         self.client.logout()
         
         #try to get a feature
-        print("TEST_DELETE")
         response = self.client.delete(reverse('feat') + '/@me/@self/' + str(id))
         self.assertEqual(response.status_code,
                           403,
@@ -153,7 +168,87 @@ class GeoRESTTest(TestCase):
         self.assertEqual(len(response_json['features']),
                           1,
                           'Trying to delete other users feature did actually delete the feature')
-            
+
+    def test_unauthorized_post(self):
+        #make a new feature to save
+        new_feature = self.create_feature()
+#        response = self.client.post(reverse('feat'),
+#                                    json.dumps(new_feature),
+#                                    content_type = 'application/json')
+#        self.assertEqual(response.status_code,
+#                          400,
+#                          'The response was not a 400 for not signed in user')
+        
+
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+        
+
+        #reuse the same feature
+        response = self.client.post(reverse('feat') + "/user2",
+                                    json.dumps(new_feature),
+                                    content_type = 'application/json')
+        self.assertEqual(response.status_code,
+                          404,
+                          'response was not 404 for creating a feature to another user. response was %s: %s' % 
+                          (str(response.status_code), response.content))
+        
+    def test_unauthorized_put(self):
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+        
+        new_feature = self.create_feature()
+        new_feature.update({
+            'properties': {'first': False}
+            })
+        response = self.client.post(reverse('feat'),
+                                    json.dumps(new_feature),
+                                    content_type = 'application/json')
+
+        response_dict = json.loads(response.content)
+        feature_id = response_dict['id']
+
+        new_feature.update({
+            'properties': {'first': True}
+            })
+
+        #test with no session
+        #This crashes by design decision
+#        self.client.logout()
+#        response = self.client.put(reverse('feat') + '/@me/@self/' + str(feature_id),
+#                                    json.dumps(new_feature),
+#                                    content_type = 'application/json')
+#        
+#        self.assertEqual(response.status_code,
+#                          403,
+#                          'The response was not a 403 for not signed in user')
+        
+        self.client.logout()
+        #login another user
+        self.client.login(username = 'user2',
+                          password = 'passwd')
+        
+
+        response = self.client.put(reverse('feat') + '/user1/@self/' + str(feature_id),
+                                    json.dumps(new_feature),
+                                    content_type = 'application/json')
+        
+        self.assertEqual(response.status_code,
+                          403,
+                          'The response was not a 403 for updating another user feature. response was %s: %s' % 
+                          (str(response.status_code), response.content))
+
+        response = self.client.put(reverse('feat') + '/@me/@self/' + str(feature_id),
+                                    json.dumps(new_feature),
+                                    content_type = 'application/json')
+        
+        self.assertEqual(response.status_code,
+                          200,
+                          'The response was not a 200 for updating another user feature with new properties')
+
+#    @skip("Skipped to hasten test development") 
     def test_create_and_get_feature(self):
         #login the user
         self.client.login(username = 'user1',
@@ -257,6 +352,7 @@ class GeoRESTTest(TestCase):
         #logout
         self.client.logout()
             
+#    @skip("Skipped to hasten test development") 
     def test_update_and_get_feature(self):
         self.client.login(username = 'user1',
                           password = 'passwd')
@@ -294,6 +390,7 @@ class GeoRESTTest(TestCase):
         
         self.assertFalse(response_json['features'][0]['properties']['first'])
         
+#    @skip("Skipped to hasten test development") 
     def test_create_and_delete_feature(self):
         self.client.login(username = 'user1',
                           password = 'passwd')
@@ -325,6 +422,7 @@ class GeoRESTTest(TestCase):
                           0,
                           'the feature was not deleted')
         
+#    @skip("Skipped to hasten test development") 
     def test_create_and_get_property(self):
         #login to the service
         self.client.login(username = 'user1',
