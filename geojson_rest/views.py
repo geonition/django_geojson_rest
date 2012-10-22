@@ -6,6 +6,7 @@ from geonition_utils.exceptions import Http400
 from geonition_utils.http import HttpResponse
 from geonition_utils.http import HttpResponseBadRequest
 from geonition_utils.http import HttpResponseCreated
+from geonition_utils.http import HttpResponseForbidden
 from geonition_utils.http import HttpResponseNotFound
 from geonition_utils.http import HttpResponseUnauthorized
 from geonition_utils.views import RequestHandler
@@ -131,9 +132,17 @@ class FeatureView(RequestHandler):
         if feature == None:
             return HttpResponseBadRequest('A feature id has to be given for delete')
         
-        Feature.objects.get(id = feature).delete()
+        user = get_user(request, user)
+        # only the user that 'owns' the feature can delete it
+        if request.user == user and request.user.is_authenticated():
+            Feature.objects.get(id = feature,
+                                user = user).delete()
+            return HttpResponse("A feature was deleted")
         
-        return HttpResponse("A feature was deleted")
+        else:
+            return HttpResponseForbidden("You can only delete features that "
+                                         "are owned by the currently registered user.")
+            
     
 class PropertyView(RequestHandler):
     
