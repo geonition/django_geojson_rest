@@ -134,7 +134,6 @@ class GeoRESTTest(TestCase):
         self.client.logout()
         
         #try to get a feature
-        print("TEST_DELETE")
         response = self.client.delete(reverse('feat') + '/@me/@self/' + str(id))
         self.assertEqual(response.status_code,
                           403,
