@@ -190,8 +190,8 @@ class GeoRESTTest(TestCase):
                                     json.dumps(new_feature),
                                     content_type = 'application/json')
         self.assertEqual(response.status_code,
-                          404,
-                          'response was not 404 for creating a feature to another user. response was %s: %s' % 
+                          403,
+                          'response was not 403 for creating a feature to another user. response was %s: %s' % 
                           (str(response.status_code), response.content))
         
     def test_unauthorized_put(self):
