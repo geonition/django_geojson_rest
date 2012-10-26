@@ -193,7 +193,8 @@ class Feature(FeatureBase):
                 old_property = self.properties.get(user = user)
                 old_property.update(feature['properties'])
             except Property.DoesNotExist:
-                prop = Property()
+                prop = Property(user = user,
+                                group = self.group)
                 prop.create(feature['properties'], user)
                 self.properties.add(prop)
 
