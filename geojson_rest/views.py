@@ -89,8 +89,9 @@ class FeatureView(RequestHandler):
         
         if user == None:
             return HttpResponseBadRequest('You need to create a session before creating features')
+        
         elif user != request.user:
-            return HttpResponseBadRequest('You cannot create featues for other users')
+            return HttpResponseForbidden('You cannot create featues for other users')
         
         json_obj_response = {}
         
@@ -115,7 +116,7 @@ class FeatureView(RequestHandler):
             return HttpResponseBadRequest('You need to provide a feature id')
         
         if request.user != get_user(request, user):
-            return HttpResponseBadRequest('You can only update your own features')
+            return HttpResponseForbidden('You can only update your own features')
         
         update_feature = Feature.objects.get(id = feature)
         json_object = json.loads(request.body)
