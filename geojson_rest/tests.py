@@ -112,7 +112,7 @@ class GeoRESTTest(TestCase):
                           'Querying all public features returned also private features')
         #make a new private feature to save
         new_feature = self.create_feature()
-        #save feature for user @test
+        #save feature for user user2
         response = self.client.post(reverse('feat') + '/user2',
                                     json.dumps(new_feature),
                                     content_type = 'application/json')
@@ -201,7 +201,8 @@ class GeoRESTTest(TestCase):
         
         new_feature = self.create_feature()
         new_feature.update({
-            'properties': {'first': False}
+            'properties': {'first': False,
+                           'second': "test string"}
             })
         response = self.client.post(reverse('feat'),
                                     json.dumps(new_feature),
@@ -211,7 +212,8 @@ class GeoRESTTest(TestCase):
         feature_id = response_dict['id']
 
         new_feature.update({
-            'properties': {'first': True}
+            'properties': {'first': True,
+                           'third': 657677}
             })
 
         #test with no session
@@ -247,7 +249,21 @@ class GeoRESTTest(TestCase):
         self.assertEqual(response.status_code,
                           200,
                           'The response was not a 200 for updating another user feature with new properties')
+        
+        #get the feature
+        self.client.logout()
+        #login user who owns the feature
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+        response = self.client.get(reverse('feat') + '/@me/@self/' + str(feature_id))
 
+        response_dict = json.loads(response.content)
+        feature_properties = response_dict['features'][0]['properties']
+        self.assertEqual(len(feature_properties),
+                         2,
+                         'Only one set of properties returned.')
+        
+        
 #    @skip("Skipped to hasten test development") 
     def test_create_and_get_feature(self):
         #login the user
@@ -526,3 +542,49 @@ class GeoRESTTest(TestCase):
                            'list',
                            'hello'],
                           "The selector list was not what it should have been")
+        
+    def test_download_csv(self):
+        feat1 = self.create_feature()
+        feat2 = self.create_feature({'first': "test2"})
+        feat3 = self.create_feature({'first': "test3", 'second': 2})
+        feat4 = self.create_feature({'first': "test4", 'third': u'adsaddas'})
+        
+        #del(feat1['properties'])
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+        
+        #Post features to the database
+        response = self.client.post(reverse('feat'),
+                            json.dumps(feat4),
+                            content_type = 'application/json')
+        response = self.client.post(reverse('feat'),
+                            json.dumps(feat3),
+                            content_type = 'application/json')
+        response = self.client.post(reverse('feat'),
+                            json.dumps(feat2),
+                            content_type = 'application/json')
+        response = self.client.post(reverse('feat'),
+                            json.dumps(feat1),
+                            content_type = 'application/json')
+
+        
+
+        
+        from models import Feature
+        from actions import download_csv
+        from admin import FeatureAdmin
+        from django.test.client import RequestFactory
+        
+        factory = RequestFactory()
+        request = ""
+#        request = factory.post('/admin/geojson_rest/pointfeature/')
+        features = Feature.objects.all()
+        
+        csv = download_csv(FeatureAdmin, request, features)
+        
+        print csv
+        
+
+        
+        
