@@ -1,4 +1,10 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 from actions import get_selectors
+from models import Feature
+from actions import download_csv
+from admin import FeatureAdmin
 from datetime import datetime
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
@@ -6,9 +12,9 @@ from django.test import TestCase
 from django.test.client import Client
 from django.test.utils import override_settings
 from django.utils import simplejson as json
-from models import Feature
 from time import sleep
 from django.utils.unittest import skip
+import csv
 import copy
 
 @override_settings(SPATIAL_REFERENCE_SYSTEM_ID = 4326)
@@ -543,13 +549,11 @@ class GeoRESTTest(TestCase):
                            'hello'],
                           "The selector list was not what it should have been")
         
-    def test_download_csv(self):
-        feat1 = self.create_feature()
+    def test_download_csv_with_nested_objects(self):
         feat2 = self.create_feature({'first': "test2"})
-        feat3 = self.create_feature({'first': "test3", 'second': 2})
-        feat4 = self.create_feature({'first': "test4", 'third': u'adsaddas'})
+        feat3 = self.create_feature({'first': "test3", 'second': 2, 'third': {}})
+        feat4 = self.create_feature({'first': "test4", 'third': {'test4': 'This will break the code'}})
         
-        #del(feat1['properties'])
         #login the user
         self.client.login(username = 'user1',
                           password = 'passwd')
@@ -558,33 +562,195 @@ class GeoRESTTest(TestCase):
         response = self.client.post(reverse('feat'),
                             json.dumps(feat4),
                             content_type = 'application/json')
+        response_dict = json.loads(response.content)
+        feat1_create_time = response_dict['time']['create_time']
+        feat1_prop_create_time = response_dict['properties']['time']['create_time']
+
         response = self.client.post(reverse('feat'),
                             json.dumps(feat3),
                             content_type = 'application/json')
+        response_dict = json.loads(response.content)
+        feat2_create_time = response_dict['time']['create_time']
+        feat2_prop_create_time = response_dict['properties']['time']['create_time']
+        
         response = self.client.post(reverse('feat'),
                             json.dumps(feat2),
                             content_type = 'application/json')
+        response_dict = json.loads(response.content)
+        feat3_create_time = response_dict['time']['create_time']
+        feat3_prop_create_time = response_dict['properties']['time']['create_time']
+        
+
+        f_admin= FeatureAdmin(Feature,1)
+        request = ""
+        features = Feature.objects.all()
+        csv_response = download_csv(f_admin, request, features)
+        
+        
+        csv_lines= []
+        
+        csv_lines.append(['group',
+                          'user',
+                          'time.expire_time',
+                          'time.create_time',
+                          'geometry',
+                          'type',
+                          'id',
+                          'private',
+                          'properties.group',
+                          'properties.user',
+                          'properties.third.test4',
+                          'properties.time.expire_time',
+                          'properties.time.create_time',
+                          'properties.id',
+                          'properties.first',
+                          'properties.second'])
+
+        csv_lines.append(['@self',
+                          'user1',
+                          '',
+                          feat1_create_time,
+                          'POINT (20.0000000000000000 30.0000000000000000)',
+                          'Feature',
+                          '8',
+                          'True',
+                          '@self',
+                          'user1',
+                          'This will break the code',
+                          '',
+                          feat1_prop_create_time,
+                          '9',
+                          'test4',
+                          ''])        
+
+        csv_lines.append(['@self',
+                          'user1',
+                          '',
+                          feat2_create_time,
+                          'POINT (20.0000000000000000 30.0000000000000000)',
+                          'Feature',
+                          '9',
+                          'True',
+                          '@self',
+                          'user1',
+                          '',
+                          '',
+                          feat2_prop_create_time,
+                          '10',
+                          'test3',
+                          '2'])        
+        csv_lines.append(['@self',
+                          'user1',
+                          '',
+                          feat3_create_time,
+                          'POINT (20.0000000000000000 30.0000000000000000)',
+                          'Feature',
+                          '10',
+                          'True',
+                          '@self',
+                          'user1',
+                          '',
+                          '',
+                          feat3_prop_create_time,
+                          '11',
+                          'test2',
+                          ''])        
+        csvr = csv.reader(csv_response)
+        for index,line in enumerate(csvr):
+            #First line is empty
+            if index > 0:
+                #We need to skip time
+                self.assertEqual(csv_lines[index-1], line, 'csv line:%s is not correct\n %s != %s' % (index, csv_lines[index-1], line) )
+
+        
+    def test_download_csv_with_utf_8(self):
+        feat1 = self.create_feature({u'first': u'äÄöÖåÅ€'})
+        feat2 = self.create_feature({u'second': u'Test'})
+        
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+        
+        #Post features to the database
         response = self.client.post(reverse('feat'),
                             json.dumps(feat1),
                             content_type = 'application/json')
+        response_dict = json.loads(response.content)
+        #print response_dict
+        feat1_create_time = response_dict['time']['create_time']
+        feat1_prop_create_time = response_dict['properties']['time']['create_time']
 
-        
+        #Post features to the database
+        response = self.client.post(reverse('feat'),
+                            json.dumps(feat2),
+                            content_type = 'application/json')
+        response_dict = json.loads(response.content)
+        #print response_dict
+        feat2_create_time = response_dict['time']['create_time']
+        feat2_prop_create_time = response_dict['properties']['time']['create_time']
 
-        
-        from models import Feature
-        from actions import download_csv
-        from admin import FeatureAdmin
-        from django.test.client import RequestFactory
-        
-        factory = RequestFactory()
+        f_admin= FeatureAdmin(Feature,1)
         request = ""
-#        request = factory.post('/admin/geojson_rest/pointfeature/')
         features = Feature.objects.all()
+        csv_response = download_csv(f_admin, request, features)
         
-        csv = download_csv(FeatureAdmin, request, features)
         
-        print csv
+        csv_lines= []
         
+        csv_lines.append(['group',
+                          'user',
+                          'time.expire_time',
+                          'time.create_time',
+                          'geometry',
+                          'type',
+                          'id',
+                          'private',
+                          'properties.id',
+                          'properties.first',
+                          'properties.group',
+                          'properties.user',
+                          'properties.time.expire_time',
+                          'properties.time.create_time',
+                          'properties.second'])
 
+        csv_lines.append(['@self',
+                          'user1',
+                          '',
+                          feat1_create_time,
+                          'POINT (20.0000000000000000 30.0000000000000000)',
+                          'Feature',
+                          '11',
+                          'True',
+                          '12',
+                          'äÄöÖåÅ€'
+                          '@self',
+                          'user1',
+                          '',
+                          feat1_prop_create_time,
+                          '',
+                          ])        
         
+        csv_lines.append(['@self',
+                          'user1',
+                          '',
+                          feat2_create_time,
+                          'POINT (20.0000000000000000 30.0000000000000000)',
+                          'Feature',
+                          '12',
+                          'True',
+                          '13',
+                          ''
+                          '@self',
+                          'user1',
+                          '',
+                          feat2_prop_create_time,
+                          'Test',
+                          ])        
+
+        csvr = csv.reader(csv_response)
+        for index,line in enumerate(csvr):
+            #First line is empty
+            if index > 0:
+                #We need to skip time
+                self.assertEqual(csv_lines[index-1], line, 'csv line:%s is not correct\n %s != %s' % (index, csv_lines[index-1], line) )
         
