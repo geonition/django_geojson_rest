@@ -564,21 +564,27 @@ class GeoRESTTest(TestCase):
                             content_type = 'application/json')
         response_dict = json.loads(response.content)
         feat1_create_time = response_dict['time']['create_time']
+        feat1_id = response_dict['id']
         feat1_prop_create_time = response_dict['properties']['time']['create_time']
+        feat1_prop_id = response_dict['properties']['id']
 
         response = self.client.post(reverse('feat'),
                             json.dumps(feat3),
                             content_type = 'application/json')
         response_dict = json.loads(response.content)
         feat2_create_time = response_dict['time']['create_time']
+        feat2_id = response_dict['id']
         feat2_prop_create_time = response_dict['properties']['time']['create_time']
+        feat2_prop_id = response_dict['properties']['id']
         
         response = self.client.post(reverse('feat'),
                             json.dumps(feat2),
                             content_type = 'application/json')
         response_dict = json.loads(response.content)
         feat3_create_time = response_dict['time']['create_time']
+        feat3_id = response_dict['id']
         feat3_prop_create_time = response_dict['properties']['time']['create_time']
+        feat3_prop_id = response_dict['properties']['id']
         
 
         f_admin= FeatureAdmin(Feature,1)
@@ -612,14 +618,14 @@ class GeoRESTTest(TestCase):
                           feat1_create_time,
                           'POINT (20.0000000000000000 30.0000000000000000)',
                           'Feature',
-                          '8',
+                          str(feat1_id),
                           'True',
                           '@self',
                           'user1',
                           'This will break the code',
                           '',
                           feat1_prop_create_time,
-                          '9',
+                          str(feat1_prop_id),
                           'test4',
                           ''])        
 
@@ -629,14 +635,14 @@ class GeoRESTTest(TestCase):
                           feat2_create_time,
                           'POINT (20.0000000000000000 30.0000000000000000)',
                           'Feature',
-                          '9',
+                          str(feat2_id),
                           'True',
                           '@self',
                           'user1',
                           '',
                           '',
                           feat2_prop_create_time,
-                          '10',
+                          str(feat2_prop_id),
                           'test3',
                           '2'])        
         csv_lines.append(['@self',
@@ -645,14 +651,14 @@ class GeoRESTTest(TestCase):
                           feat3_create_time,
                           'POINT (20.0000000000000000 30.0000000000000000)',
                           'Feature',
-                          '10',
+                          str(feat3_id),
                           'True',
                           '@self',
                           'user1',
                           '',
                           '',
                           feat3_prop_create_time,
-                          '11',
+                          str(feat3_prop_id),
                           'test2',
                           ''])        
         csvr = csv.reader(csv_response)
@@ -678,7 +684,9 @@ class GeoRESTTest(TestCase):
         response_dict = json.loads(response.content)
         #print response_dict
         feat1_create_time = response_dict['time']['create_time']
+        feat1_id = response_dict['id']
         feat1_prop_create_time = response_dict['properties']['time']['create_time']
+        feat1_prop_id = response_dict['properties']['id']
 
         #Post features to the database
         response = self.client.post(reverse('feat'),
@@ -687,7 +695,9 @@ class GeoRESTTest(TestCase):
         response_dict = json.loads(response.content)
         #print response_dict
         feat2_create_time = response_dict['time']['create_time']
+        feat2_id = response_dict['id']
         feat2_prop_create_time = response_dict['properties']['time']['create_time']
+        feat2_prop_id = response_dict['properties']['id']
 
         f_admin= FeatureAdmin(Feature,1)
         request = ""
@@ -719,10 +729,10 @@ class GeoRESTTest(TestCase):
                           feat1_create_time,
                           'POINT (20.0000000000000000 30.0000000000000000)',
                           'Feature',
-                          '11',
+                          str(feat1_id),
                           'True',
-                          '12',
-                          'äÄöÖåÅ€'
+                          str(feat1_prop_id),
+                          'äÄöÖåÅ€',
                           '@self',
                           'user1',
                           '',
@@ -736,10 +746,10 @@ class GeoRESTTest(TestCase):
                           feat2_create_time,
                           'POINT (20.0000000000000000 30.0000000000000000)',
                           'Feature',
-                          '12',
+                          str(feat2_id),
                           'True',
-                          '13',
-                          ''
+                          str(feat2_prop_id),
+                          '',
                           '@self',
                           'user1',
                           '',
