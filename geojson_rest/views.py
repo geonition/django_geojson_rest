@@ -200,10 +200,9 @@ class PropertyView(RequestHandler):
         
         uri = ""
         if feature != '@null': #connect feature to property
-            Feature.object.get(id = feature,
+            Feature.objects.get(id = feature,
                                group = group).properties.add(new_property)
-        
-            uri = "%s/%s/%s/%i/%i" % (reverse('prop'),
+            uri = "%s/%s/%s/%s/%i" % (reverse('prop'),
                                       user.username,
                                       group,
                                       feature,
