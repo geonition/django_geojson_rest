@@ -53,7 +53,7 @@ class GeoRESTTest(TestCase):
         return copy.deepcopy(self.base_featurecollection)
     
 #    @skip("Skipped to hasten test development") 
-    def test_unauthorized_get(self):
+    def test_unauthorized_feature_get(self):
         #login the user
         self.client.login(username = 'user1',
                           password = 'passwd')
@@ -175,7 +175,7 @@ class GeoRESTTest(TestCase):
                           1,
                           'Trying to delete other users feature did actually delete the feature')
 
-    def test_unauthorized_post(self):
+    def test_unauthorized_feature_post(self):
         #make a new feature to save
         new_feature = self.create_feature()
 #        response = self.client.post(reverse('feat'),
@@ -200,7 +200,7 @@ class GeoRESTTest(TestCase):
                           'response was not 403 for creating a feature to another user. response was %s: %s' % 
                           (str(response.status_code), response.content))
         
-    def test_unauthorized_put(self):
+    def test_unauthorized_feature_put(self):
         #login the user
         self.client.login(username = 'user1',
                           password = 'passwd')
@@ -269,7 +269,224 @@ class GeoRESTTest(TestCase):
                          2,
                          'Only one set of properties returned.')
         
+    def test_unauthorized_property_get(self):
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
         
+        #make a new property to save
+        new_property = {'first': 'first',
+                        'second': 5}
+        response = self.client.post(reverse('prop'),
+                                    json.dumps(new_property),
+                                    content_type = 'application/json')
+        
+        response_dict = json.loads(response.content)
+        id = response_dict['id']
+        self.client.logout()
+        
+        #try to get a property
+#        response = self.client.get(reverse('prop') + "/user1/@self/@null/" + str(id))
+#        self.assertEquals(response.status_code,
+#                          400,
+#                          'The response was not a 400, not signed in user could get a property')
+        
+        self.client.login(username = 'user2',
+                          password = 'passwd')
+        
+        response = self.client.get(reverse('prop') + '/user1/@self/@null/' + str(id))
+        self.assertEquals(response.status_code,
+                          200,
+                          'The response was not a 200, property was not a public one')
+        response_json = json.loads(response.content)
+        
+        self.client.logout()
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+        
+        #make a new property to save
+        new_property = {'first': 'second',
+                        'second': False}
+        response = self.client.post(reverse('prop'),
+                                    json.dumps(new_property),
+                                    content_type = 'application/json')
+        
+        response_dict = json.loads(response.content)
+        id = response_dict['id']
+
+        self.client.logout()
+        #login the user
+        self.client.login(username = 'user2',
+                          password = 'passwd')
+
+        #Query all user1 properties
+        response = self.client.get(reverse('prop') + '/user1')
+
+        self.assertEquals(response.status_code,
+                          200,
+                          'The response was not a 200')
+
+        response_json = json.loads(response.content)
+        self.assertNotEqual(len(response_json['entry']),
+                          0,
+                          'Querying all properties did not return any')
+
+        self.assertEqual(len(response_json['entry']),
+                          2,
+                          'Querying all properies returned only one.')
+
+        #Query all properties as @me
+        response = self.client.get(reverse('prop'))
+        self.assertEquals(response.status_code,
+                          404,
+                          'The response was not a 404')
+
+        response_json = json.loads(response.content)
+        self.assertEqual(response_json['msg'],
+                          'The property you queried was not found',
+                          'Returned message was not correct')
+
+        
+    def test_unauthorized_property_post(self):
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+
+        new_property = {'first': 'first',
+                        'second': 5}
+        response = self.client.post(reverse('prop') + "/user2",
+                                    json.dumps(new_property),
+                                    content_type = 'application/json')
+        
+        response_dict = json.loads(response.content)
+
+        self.assertEqual(response.status_code,
+                          404,
+                          'response was not 404 for creating a property to another user. response was %s: %s' % 
+                          (str(response.status_code), response.content))
+
+    def test_unauthorized_property_put(self):
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+        
+        new_property = {'first': 'first',
+                        'second': 5}
+        response = self.client.post(reverse('prop'),
+                                    json.dumps(new_property),
+                                    content_type = 'application/json')
+        
+        response_dict = json.loads(response.content)
+        property_id = response_dict['id']
+
+        new_property.update({ 'first': True,
+                           'third': 657677})
+
+        
+        self.client.logout()
+        #login another user
+        self.client.login(username = 'user2',
+                          password = 'passwd')
+        
+
+        response = self.client.put(reverse('prop') + '/user1/@self/@null/' + str(property_id),
+                                    json.dumps(new_property),
+                                    content_type = 'application/json')
+        
+        self.assertEqual(response.status_code,
+                          404,
+                          'The response was not a 404 for updating another user property. response was %s: %s' % 
+                          (str(response.status_code), response.content))
+
+    def test_delete_other_users_property(self):
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+        
+        new_property = {'first': 'first',
+                        'second': 5}
+        response = self.client.post(reverse('prop'),
+                                    json.dumps(new_property),
+                                    content_type = 'application/json')
+        
+        response_dict = json.loads(response.content)
+        property_id = response_dict['id']
+        self.client.logout()
+        
+        #try to delete a feature
+        response = self.client.delete(reverse('prop') + '/@me/@self/@null/' + str(property_id))
+        self.assertEqual(response.status_code,
+                          403,
+                          'The response was not a 403, other users public feature might be deleted by not signed in user')
+        
+
+        #login the user1 back to check if property was really deleted
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+
+        response = self.client.get(reverse('prop'))
+        response_json = json.loads(response.content)
+        self.assertTrue(response_json.has_key('group'),
+                          'Trying to delete other users property did actually delete the feature')
+        
+
+    def test_add_property_to_feature(self):
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+
+        #make a new feature to save
+        new_feature = self.create_feature()
+        response = self.client.post(reverse('feat'),
+                                    json.dumps(new_feature),
+                                    content_type = 'application/json')
+        
+        response_dict = json.loads(response.content)
+        feature_id = response_dict['id']
+        
+        new_property = {'first': 'first',
+                        'second': 5}
+        response = self.client.post(reverse('prop') + '/@me/@self/' + str(feature_id),
+                                    json.dumps(new_property),
+                                    content_type = 'application/json')
+        
+        response_dict = json.loads(response.content)
+        property_id = response_dict['id']
+        
+        # get the feature
+        response = self.client.get(reverse('feat') + "/@me/@self/" + str(feature_id))
+        response_dict = json.loads(response.content)
+        prop = response_dict['features'][0]['properties']
+        self.assertEqual(prop['first'], 'first', 'property did not get added to the feature')
+
+        #update the property
+        new_property.update({'first': 'second',
+                        'second': False})
+        
+        response = self.client.put(reverse('prop') + '/@me/@self/' + str(feature_id) + "/" + str(property_id),
+                                    json.dumps(new_property),
+                                    content_type = 'application/json')
+        
+        response_dict = json.loads(response.content)
+        
+        # get the feature
+        response = self.client.get(reverse('feat') + "/@me/@self/" + str(feature_id))
+        response_dict = json.loads(response.content)
+        prop = response_dict['features'][0]['properties']
+        self.assertEqual(prop['first'], 'second', 'property did not get added to the feature')
+        
+        # delete the property
+        response = self.client.delete(reverse('prop') + '/@me/@self/' + str(feature_id) + "/" + str(property_id))
+        self.assertEqual(response.status_code,
+                          200,
+                          'The response was not a 200. Delete with feature id was not succesfull')
+        # get the feature
+        response = self.client.get(reverse('feat') + "/@me/@self/" + str(feature_id))
+        response_dict = json.loads(response.content)
+        prop = response_dict['features'][0]['properties']
+        self.assertEqual(prop['first'], 'second', 'property did not get added to the feature')
+
 #    @skip("Skipped to hasten test development") 
     def test_create_and_get_feature(self):
         #login the user
