@@ -1051,6 +1051,7 @@ class GeoRESTAdminTest(TestCase):
         #import ipdb; ipdb.set_trace()
         response = self.client.post(reverse('admin:geojson_rest_pointfeature_delete', args=(feat_id,)),
                                     postdata)
+        response = self.client.get(response['Location'])
 
         self.assertContains(response, 'Successfully deleted 1 point feature.')
 
@@ -1078,6 +1079,7 @@ class GeoRESTAdminTest(TestCase):
         response = self.client.post(reverse('admin:geojson_rest_linestringfeature_delete', args=(feat_id,)),
                                     postdata)
 
+        response = self.client.get(response['Location'])
         self.assertContains(response, 'Successfully deleted 1 linestring feature.')
 
     def test_delete_polygonfeature(self):
@@ -1103,6 +1105,49 @@ class GeoRESTAdminTest(TestCase):
         #import ipdb; ipdb.set_trace()
         response = self.client.post(reverse('admin:geojson_rest_polygonfeature_delete', args=(feat_id,)),
                                     postdata)
+        response = self.client.get(response['Location'])
 
         self.assertContains(response, 'Successfully deleted 1 polygon feature.')
+
+    def test_delete_property(self):
+        new_feature = self.create_feature(prop_dict={'first': False}, geom_type='Polygon')
+
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
         
+
+        #save the feature
+        response = self.client.post(reverse('feat'),
+                                    json.dumps(new_feature),
+                                    content_type = 'application/json')
+        response_dict = json.loads(response.content)
+        feat_id = response_dict['id']
+        property_connected_to_feature_id = response_dict['properties']['id']
+
+        #create property without feature
+        response = self.client.post(reverse('prop') + '/@me/@self/@null',
+                                    json.dumps({'key': 'first saved'}),
+                                    content_type = 'application/json')   
+        
+        property_id = json.loads(response.content)['id']
+        
+        self.client.logout()
+        
+        self.client.login(username = 'admin', password = 'passwd')
+
+        postdata = {'post' : 'yes'}
+        #Test delete property not connected to feature
+        response = self.client.post(reverse('admin:geojson_rest_property_delete', args=(property_id,)),
+                                    postdata)
+        response = self.client.get(response['Location'])
+
+        self.assertContains(response, 'The property &quot;%s @self user1&quot; was deleted successfully.' % property_id)
+
+        #Test delete property connected to feature
+        response = self.client.post(reverse('admin:geojson_rest_property_delete', args=(property_connected_to_feature_id,)),
+                                    postdata)
+        response = self.client.get(response['Location'])
+
+        self.assertContains(response, 'The property &quot;%s @self user1&quot; was deleted successfully.' % property_connected_to_feature_id)
+                
