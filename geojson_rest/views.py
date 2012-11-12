@@ -235,6 +235,8 @@ class PropertyView(RequestHandler):
                 property = Property.objects.get(id = property,
                                                 user = user)
                 property.update(json_object)
+            else:
+                return HttpResponseForbidden('You cannot update others properties')
         
         return HttpResponse(json.dumps(property.to_json()))
     

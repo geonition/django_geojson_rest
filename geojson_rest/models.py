@@ -5,6 +5,7 @@ from django.contrib.gis.db import models as gismodels
 from django.contrib.gis.gdal import OGRGeometry
 from django.contrib.auth.models import User
 from django.utils import simplejson as json
+from django.utils.translation import ugettext_lazy as _
 from geonition_utils.models import JSON
 from geonition_utils.models import TimeD
 
@@ -225,6 +226,8 @@ class PointFeature(FeatureBase):
     class Meta:
         managed = False
         db_table = 'pointfeature'
+        verbose_name = _('place')
+        verbose_name_plural = _('places')
         
 #hack to handle manytomanyfields in database views and django ORM
 class PointFeatureProperty(models.Model):
@@ -244,6 +247,8 @@ class PointFeatureProperty(models.Model):
     class Meta:
         managed = False
         db_table = 'pointfeatureproperty'
+        verbose_name = _('place property')
+        verbose_name_plural = _('place properties')
 
 class LinestringFeature(FeatureBase):
     """
@@ -271,6 +276,8 @@ class LinestringFeature(FeatureBase):
     class Meta:
         managed = False
         db_table = 'linestringfeature'
+        verbose_name = _('route')
+        verbose_name_plural = _('ruotes')
 
 #hack to handle manytomanyfields in database views and django ORM
 class LinestringFeatureProperty(models.Model):
@@ -286,6 +293,8 @@ class LinestringFeatureProperty(models.Model):
     class Meta:
         managed = False
         db_table = 'linestringfeatureproperty'
+        verbose_name = _('route property')
+        verbose_name_plural = _('ruote properties')
         
 class PolygonFeature(FeatureBase):
     """
@@ -313,6 +322,8 @@ class PolygonFeature(FeatureBase):
     class Meta:
         managed = False
         db_table = 'polygonfeature'
+        verbose_name = _('area')
+        verbose_name_plural = _('areas')
         
 #hack to handle manytomanyfields in database views and django ORM
 class PolygonFeatureProperty(models.Model):
@@ -328,3 +339,5 @@ class PolygonFeatureProperty(models.Model):
     class Meta:
         managed = False
         db_table = 'polygonfeatureproperty'
+        verbose_name = _('area property')
+        verbose_name_plural = _('area properties')

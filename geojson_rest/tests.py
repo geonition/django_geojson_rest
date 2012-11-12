@@ -380,7 +380,7 @@ class GeoRESTTest(TestCase):
         response_dict = json.loads(response.content)
         property_id = response_dict['id']
 
-        new_property.update({ 'first': True,
+        new_property.update({'first': True,
                            'third': 657677})
 
         
