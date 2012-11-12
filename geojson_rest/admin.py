@@ -1,17 +1,13 @@
-from actions import download_csv
+from geojson_rest.actions import download_csv
 from django.conf import settings
-from django.conf.urls.defaults import patterns
+from django.core.urlresolvers import reverse_lazy
 from django.contrib import admin
 from django.contrib.gis import admin as gisadmin
-from django.shortcuts import render_to_response
-from django.template import RequestContext
 from django.utils.translation import ugettext_lazy as _
-from geojson_rest.models import Feature
 from geojson_rest.models import PointFeature
 from geojson_rest.models import LinestringFeature
 from geojson_rest.models import PolygonFeature
 from geojson_rest.models import Property
-import json
 
 class HasFeatureFilter(admin.SimpleListFilter):
     # Human-readable title which will be displayed in the
@@ -69,6 +65,10 @@ class PointFeatureAdmin(gisadmin.OSMGeoAdmin, FeatureAdmin):
     point geometries.
     """
     
+    openlayers_url = '%s%s' % (getattr(settings, 'STATIC_URL', '/'),
+                               'js/libs/OpenLayers.js')
+    extra_js = (reverse_lazy('osmextra'),)
+    
     def queryset(self, request):
         return self.model.objects.all()
         
@@ -80,6 +80,10 @@ class LinestringFeatureAdmin(gisadmin.OSMGeoAdmin, FeatureAdmin):
     linestring geometries.
     """
     
+    openlayers_url = '%s%s' % (getattr(settings, 'STATIC_URL', '/'),
+                               'js/libs/OpenLayers.js')
+    extra_js = (reverse_lazy('osmextra'),)
+    
     def queryset(self, request):
         return self.model.objects.all()
         
@@ -90,6 +94,10 @@ class PolygonFeatureAdmin(gisadmin.OSMGeoAdmin, FeatureAdmin):
     This is subclass for FeatureAdmin but handles only
     polygon geometries.
     """
+    
+    openlayers_url = '%s%s' % (getattr(settings, 'STATIC_URL', '/'),
+                               'js/libs/OpenLayers.js')
+    extra_js = (reverse_lazy('osmextra'),)
     
     def queryset(self, request):
         return self.model.objects.all()
