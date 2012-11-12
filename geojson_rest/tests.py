@@ -431,7 +431,7 @@ class GeoRESTTest(TestCase):
                           'Trying to delete other users property did actually delete the feature')
         
 
-    def test_add_property_to_feature(self):
+    def test_add_and_delete_property_to_feature(self):
         #login the user
         self.client.login(username = 'user1',
                           password = 'passwd')
@@ -474,7 +474,7 @@ class GeoRESTTest(TestCase):
         response = self.client.get(reverse('feat') + "/@me/@self/" + str(feature_id))
         response_dict = json.loads(response.content)
         prop = response_dict['features'][0]['properties']
-        self.assertEqual(prop['first'], 'second', 'property did not get added to the feature')
+        self.assertEqual(prop['first'], 'second', 'property did not get updated')
         
         # delete the property
         response = self.client.delete(reverse('prop') + '/@me/@self/' + str(feature_id) + "/" + str(property_id))
@@ -485,7 +485,7 @@ class GeoRESTTest(TestCase):
         response = self.client.get(reverse('feat') + "/@me/@self/" + str(feature_id))
         response_dict = json.loads(response.content)
         prop = response_dict['features'][0]['properties']
-        self.assertEqual(prop['first'], 'second', 'property did not get added to the feature')
+        self.assertEqual(prop['first'], 'second', 'property did not get deleted')
 
 #    @skip("Skipped to hasten test development") 
     def test_create_and_get_feature(self):
@@ -980,4 +980,129 @@ class GeoRESTTest(TestCase):
             if index > 0:
                 #We need to skip time
                 self.assertEqual(csv_lines[index-1], line, 'csv line:%s is not correct\n %s != %s' % (index, csv_lines[index-1], line) )
+                
+                
+class GeoRESTAdminTest(TestCase):
+    
+    def setUp(self):
+        self.client = Client()
+
+        self.user1 = User.objects.create_user('user1', '', 'passwd')
+    
+        #setup a admin
+        self.admin_user = User.objects.create_user('admin', '', 'passwd')
+        self.admin_user.is_staff = True
+        self.admin_user.is_superuser = True
+        self.admin_user.save()
+
+        self.base_feature = {
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Point',
+                'coordinates': [20, 30]},
+            'properties': {},
+            'private': True
+        }
+        
+    def create_feature(self, prop_dict=None, geom_type='Point'):
+        new_feat = copy.deepcopy(self.base_feature)
+        linestring_coords = [
+          [102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0]
+          ]
+        polygon_coords = [
+           [ [100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
+             [100.0, 1.0], [100.0, 0.0] ]
+           ]
+        if prop_dict != None:
+            new_feat['properties'] = prop_dict
+            
+        if geom_type != 'Point':
+            new_feat['geometry']['type'] = geom_type
+            if geom_type == 'LineString':
+                new_feat['geometry']['coordinates'] = linestring_coords
+            else:
+                new_feat['geometry']['coordinates'] = polygon_coords
+                
+                
+        return new_feat
+        
+        
+
+    def test_delete_pointfeature(self):
+
+        new_feature = self.create_feature()
+
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+        
+
+        #save the feature
+        response = self.client.post(reverse('feat'),
+                                    json.dumps(new_feature),
+                                    content_type = 'application/json')
+        response_dict = json.loads(response.content)
+        feat_id = response_dict['id']
+
+        self.client.logout()
+        
+        self.client.login(username = 'admin', password = 'passwd')
+        postdata = {'post' : 'yes'}
+        #import ipdb; ipdb.set_trace()
+        response = self.client.post(reverse('admin:geojson_rest_pointfeature_delete', args=(feat_id,)),
+                                    postdata)
+
+        self.assertContains(response, 'Successfully deleted 1 point feature.')
+
+    def test_delete_linestringfeature(self):
+
+        new_feature = self.create_feature(geom_type='LineString')
+
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+        
+
+        #save the feature
+        response = self.client.post(reverse('feat'),
+                                    json.dumps(new_feature),
+                                    content_type = 'application/json')
+        response_dict = json.loads(response.content)
+        feat_id = response_dict['id']
+
+        self.client.logout()
+        
+        self.client.login(username = 'admin', password = 'passwd')
+        postdata = {'post' : 'yes'}
+        #import ipdb; ipdb.set_trace()
+        response = self.client.post(reverse('admin:geojson_rest_linestringfeature_delete', args=(feat_id,)),
+                                    postdata)
+
+        self.assertContains(response, 'Successfully deleted 1 linestring feature.')
+
+    def test_delete_polygonfeature(self):
+
+        new_feature = self.create_feature(geom_type='Polygon')
+
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+        
+
+        #save the feature
+        response = self.client.post(reverse('feat'),
+                                    json.dumps(new_feature),
+                                    content_type = 'application/json')
+        response_dict = json.loads(response.content)
+        feat_id = response_dict['id']
+
+        self.client.logout()
+        
+        self.client.login(username = 'admin', password = 'passwd')
+        postdata = {'post' : 'yes'}
+        #import ipdb; ipdb.set_trace()
+        response = self.client.post(reverse('admin:geojson_rest_polygonfeature_delete', args=(feat_id,)),
+                                    postdata)
+
+        self.assertContains(response, 'Successfully deleted 1 polygon feature.')
         
