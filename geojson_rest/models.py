@@ -277,7 +277,7 @@ class LinestringFeature(FeatureBase):
         managed = False
         db_table = 'linestringfeature'
         verbose_name = _('route')
-        verbose_name_plural = _('ruotes')
+        verbose_name_plural = _('routes')
 
 #hack to handle manytomanyfields in database views and django ORM
 class LinestringFeatureProperty(models.Model):
@@ -294,7 +294,7 @@ class LinestringFeatureProperty(models.Model):
         managed = False
         db_table = 'linestringfeatureproperty'
         verbose_name = _('route property')
-        verbose_name_plural = _('ruote properties')
+        verbose_name_plural = _('route properties')
         
 class PolygonFeature(FeatureBase):
     """
