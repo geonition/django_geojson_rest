@@ -1,0 +1,107 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# 
+# Translators:
+#   <kristoffer.snabb@geonition.org>, 2012.
+msgid ""
+msgstr ""
+"Project-Id-Version: geonition\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-11-12 08:05-0600\n"
+"PO-Revision-Date: 2012-11-12 14:22+0000\n"
+"Last-Translator: ksnabb <kristoffer.snabb@geonition.org>\n"
+"Language-Team: Finnish (http://www.transifex.com/projects/p/geonition/language/fi/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fi\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: actions.py:62
+msgid "Download as a csv file"
+msgstr "Lataa CSV muodossa"
+
+#: admin.py:15 admin.py:29
+msgid "is connected to feature"
+msgstr "on sidottu paikkaan"
+
+#: admin.py:30
+msgid "is not connected to feature"
+msgstr "ei ole sidottu paikkaan"
+
+#: admin.py:82
+msgid "successfully deleted places."
+msgstr "paikat on poistettu"
+
+#: admin.py:84
+msgid "delete selected places"
+msgstr "valitut paikat on poistettu"
+
+#: admin.py:111
+msgid "successfully deleted routes."
+msgstr "reitit on poistettu"
+
+#: admin.py:113
+msgid "delete selected routes"
+msgstr "valitut reitit on poistettu"
+
+#: admin.py:140
+msgid "successfully deleted areas."
+msgstr "alueet on poistettu"
+
+#: admin.py:142
+msgid "delete selected areas"
+msgstr "valitut alueet on poistettu"
+
+#: models.py:229
+msgid "place"
+msgstr "paikka"
+
+#: models.py:230
+msgid "places"
+msgstr "paikat"
+
+#: models.py:250
+msgid "place property"
+msgstr "paikan ominaisuus"
+
+#: models.py:251
+msgid "place properties"
+msgstr "paikan ominaisuudet"
+
+#: models.py:279
+msgid "route"
+msgstr "reitti"
+
+#: models.py:280
+msgid "ruotes"
+msgstr "reitit"
+
+#: models.py:296
+msgid "route property"
+msgstr "reitin ominaisuus"
+
+#: models.py:297
+msgid "ruote properties"
+msgstr "reitin ominaisuudet"
+
+#: models.py:325
+msgid "area"
+msgstr "alue"
+
+#: models.py:326
+msgid "areas"
+msgstr "alueet"
+
+#: models.py:342
+msgid "area property"
+msgstr "alueen ominaisuus"
+
+#: models.py:343
+msgid "area properties"
+msgstr "alueen ominaisuudet"
+
+#: templates/admin/geojson_rest/feature/view_features.html:5
+msgid "Feature view"
+msgstr "paikka ominaisuudet"

@@ -1,0 +1,106 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# 
+# Translators:
+msgid ""
+msgstr ""
+"Project-Id-Version: geonition\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-11-12 08:05-0600\n"
+"PO-Revision-Date: 2012-11-12 14:14+0000\n"
+"Last-Translator: ksnabb <kristoffer.snabb@geonition.org>\n"
+"Language-Team: Swedish (http://www.transifex.com/projects/p/geonition/language/sv/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: sv\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: actions.py:62
+msgid "Download as a csv file"
+msgstr ""
+
+#: admin.py:15 admin.py:29
+msgid "is connected to feature"
+msgstr ""
+
+#: admin.py:30
+msgid "is not connected to feature"
+msgstr ""
+
+#: admin.py:82
+msgid "successfully deleted places."
+msgstr ""
+
+#: admin.py:84
+msgid "delete selected places"
+msgstr ""
+
+#: admin.py:111
+msgid "successfully deleted routes."
+msgstr ""
+
+#: admin.py:113
+msgid "delete selected routes"
+msgstr ""
+
+#: admin.py:140
+msgid "successfully deleted areas."
+msgstr ""
+
+#: admin.py:142
+msgid "delete selected areas"
+msgstr ""
+
+#: models.py:229
+msgid "place"
+msgstr ""
+
+#: models.py:230
+msgid "places"
+msgstr ""
+
+#: models.py:250
+msgid "place property"
+msgstr ""
+
+#: models.py:251
+msgid "place properties"
+msgstr ""
+
+#: models.py:279
+msgid "route"
+msgstr ""
+
+#: models.py:280
+msgid "ruotes"
+msgstr ""
+
+#: models.py:296
+msgid "route property"
+msgstr ""
+
+#: models.py:297
+msgid "ruote properties"
+msgstr ""
+
+#: models.py:325
+msgid "area"
+msgstr ""
+
+#: models.py:326
+msgid "areas"
+msgstr ""
+
+#: models.py:342
+msgid "area property"
+msgstr ""
+
+#: models.py:343
+msgid "area properties"
+msgstr ""
+
+#: templates/admin/geojson_rest/feature/view_features.html:5
+msgid "Feature view"
+msgstr ""
