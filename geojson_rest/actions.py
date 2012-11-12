@@ -4,10 +4,8 @@ This file contains admin actions used by the geojson_rest application
 import csv
 import json
 import types
-from django.contrib import admin
 from django.contrib.gis.geos import GEOSGeometry
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
 from django.utils.translation import ugettext_lazy as _
 
 def download_csv(modeladmin, request, queryset):
@@ -51,6 +49,7 @@ def download_csv(modeladmin, request, queryset):
                         value = value[part_selector]
                     except KeyError:
                         value = u''
+                        break
                 
             values.append(unicode(value).encode('utf-8'))
             value = dict_json

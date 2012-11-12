@@ -68,6 +68,20 @@ class PointFeatureAdmin(gisadmin.OSMGeoAdmin, FeatureAdmin):
     openlayers_url = '%s%s' % (getattr(settings, 'STATIC_URL', '/'),
                                'js/libs/OpenLayers.js')
     extra_js = (reverse_lazy('osmextra'),)
+    actions = ['delete_selected_places']
+
+    def get_actions(self, request):
+        actions = super(PointFeatureAdmin, self).get_actions(request)
+        del actions['delete_selected']
+        return actions
+
+    def delete_selected_places(self, request, queryset):
+        for obj in queryset:
+            obj.delete()
+
+        self.message_user(request, _("successfully deleted places."))
+    
+    delete_selected_places.short_description = _('delete selected places')
     
     def queryset(self, request):
         return self.model.objects.all()
@@ -83,6 +97,20 @@ class LinestringFeatureAdmin(gisadmin.OSMGeoAdmin, FeatureAdmin):
     openlayers_url = '%s%s' % (getattr(settings, 'STATIC_URL', '/'),
                                'js/libs/OpenLayers.js')
     extra_js = (reverse_lazy('osmextra'),)
+    actions = ['delete_selected_routes']
+
+    def get_actions(self, request):
+        actions = super(LinestringFeatureAdmin, self).get_actions(request)
+        del actions['delete_selected']
+        return actions
+
+    def delete_selected_routes(self, request, queryset):
+        for obj in queryset:
+            obj.delete()
+
+        self.message_user(request, _("successfully deleted routes."))
+    
+    delete_selected_routes.short_description = _('delete selected routes')
     
     def queryset(self, request):
         return self.model.objects.all()
@@ -98,6 +126,20 @@ class PolygonFeatureAdmin(gisadmin.OSMGeoAdmin, FeatureAdmin):
     openlayers_url = '%s%s' % (getattr(settings, 'STATIC_URL', '/'),
                                'js/libs/OpenLayers.js')
     extra_js = (reverse_lazy('osmextra'),)
+    actions = ['delete_selected_areas']
+
+    def get_actions(self, request):
+        actions = super(PolygonFeatureAdmin, self).get_actions(request)
+        del actions['delete_selected']
+        return actions
+
+    def delete_selected_routes(self, request, queryset):
+        for obj in queryset:
+            obj.delete()
+
+        self.message_user(request, _("successfully deleted areas."))
+    
+    delete_selected_routes.short_description = _('delete selected areas')
     
     def queryset(self, request):
         return self.model.objects.all()

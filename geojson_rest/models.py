@@ -212,6 +212,16 @@ class PointFeature(FeatureBase):
     properties = models.ManyToManyField(Property,
                                         through = 'PointFeatureProperty')
     
+    # no adding or deleting allowed for DB views
+    def has_add_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False
+    
+    #this is for superusers
+    def delete(self, *args, **kwargs):
+        Feature.objects.get(id = self.id).delete()
+        
     class Meta:
         managed = False
         db_table = 'pointfeature'
@@ -220,6 +230,16 @@ class PointFeature(FeatureBase):
 class PointFeatureProperty(models.Model):
     feature = models.ForeignKey(PointFeature)
     property = models.ForeignKey(Property)
+    
+    # no adding or deleting allowed for DB views
+    def has_add_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False
+    
+    #this is for superusers
+    def delete(self, *args, **kwargs):
+        Property.objects.get(id = self.id).delete()
     
     class Meta:
         managed = False
@@ -238,6 +258,16 @@ class LinestringFeature(FeatureBase):
     properties = models.ManyToManyField(Property,
                                         through = 'LinestringFeatureProperty')
     
+    # no adding or deleting allowed for DB views
+    def has_add_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False
+    
+    #this is for superusers
+    def delete(self, *args, **kwargs):
+        Feature.objects.get(id = self.id).delete()
+    
     class Meta:
         managed = False
         db_table = 'linestringfeature'
@@ -246,6 +276,12 @@ class LinestringFeature(FeatureBase):
 class LinestringFeatureProperty(models.Model):
     feature = models.ForeignKey(LinestringFeature)
     property = models.ForeignKey(Property)
+    
+    # no adding or deleting allowed for DB views
+    def has_add_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False
     
     class Meta:
         managed = False
@@ -264,6 +300,16 @@ class PolygonFeature(FeatureBase):
     properties = models.ManyToManyField(Property,
                                         through = 'PolygonFeatureProperty')
     
+    # no adding or deleting allowed for DB views
+    def has_add_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False
+    
+    #this is for superusers
+    def delete(self, *args, **kwargs):
+        Feature.objects.get(id = self.id).delete()
+    
     class Meta:
         managed = False
         db_table = 'polygonfeature'
@@ -272,6 +318,12 @@ class PolygonFeature(FeatureBase):
 class PolygonFeatureProperty(models.Model):
     feature = models.ForeignKey(PolygonFeature)
     property = models.ForeignKey(Property)
+    
+    # no adding or deleting allowed for DB views
+    def has_add_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False
     
     class Meta:
         managed = False
