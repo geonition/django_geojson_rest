@@ -1051,9 +1051,22 @@ class GeoRESTAdminTest(TestCase):
         #import ipdb; ipdb.set_trace()
         response = self.client.post(reverse('admin:geojson_rest_pointfeature_delete', args=(feat_id,)),
                                     postdata)
+        self.assertEqual(response.status_code,
+                          302,
+                          "Deleting a pointfeature did not return status code 302")
+        
         response = self.client.get(response['Location'])
+        self.assertEqual(response.status_code,
+                          200,
+                          "Deleting a pointfeature redirect did not work")
+        
+        response = self.client.get(reverse('feat'))
+        response_json = json.loads(response.content)
+        
+        self.assertEquals(len(response_json['features']),
+                          0,
+                          'the pointfeature was not deleted')
 
-        self.assertContains(response, 'Successfully deleted 1 point feature.')
 
     def test_delete_linestringfeature(self):
 
@@ -1079,8 +1092,21 @@ class GeoRESTAdminTest(TestCase):
         response = self.client.post(reverse('admin:geojson_rest_linestringfeature_delete', args=(feat_id,)),
                                     postdata)
 
+        self.assertEqual(response.status_code,
+                          302,
+                          "Deleting a linestringfeature did not return status code 302")
+        
         response = self.client.get(response['Location'])
-        self.assertContains(response, 'Successfully deleted 1 linestring feature.')
+        self.assertEqual(response.status_code,
+                          200,
+                          "Deleting a linestringfeature redirect did not work")
+        
+        response = self.client.get(reverse('feat'))
+        response_json = json.loads(response.content)
+        
+        self.assertEquals(len(response_json['features']),
+                          0,
+                          'the linestringfeature was not deleted')
 
     def test_delete_polygonfeature(self):
 
@@ -1105,9 +1131,21 @@ class GeoRESTAdminTest(TestCase):
         #import ipdb; ipdb.set_trace()
         response = self.client.post(reverse('admin:geojson_rest_polygonfeature_delete', args=(feat_id,)),
                                     postdata)
+        self.assertEqual(response.status_code,
+                          302,
+                          "Deleting a polygonfeature did not return status code 302")
+        
         response = self.client.get(response['Location'])
-
-        self.assertContains(response, 'Successfully deleted 1 polygon feature.')
+        self.assertEqual(response.status_code,
+                          200,
+                          "Deleting a polygonfeature redirect did not work")
+        
+        response = self.client.get(reverse('feat'))
+        response_json = json.loads(response.content)
+        
+        self.assertEquals(len(response_json['features']),
+                          0,
+                          'the polygonfeature was not deleted')
 
     def test_delete_property(self):
         new_feature = self.create_feature(prop_dict={'first': False}, geom_type='Polygon')
