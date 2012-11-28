@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 setup(
     name='geojson_rest',
-    version='5.6.0',
+    version='5.6.1',
     author='Kristoffer Snabb',
     url='https://github.com/geonition/django_geojson_rest',
     packages=find_packages(),
