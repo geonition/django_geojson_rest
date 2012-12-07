@@ -63,6 +63,10 @@ class Property(models.Model):
                         'group': self.group })
         return retval
 
+    def delete(self, *args, **kwargs):
+        super(Property, self).delete()
+    
+    
     def __unicode__(self):
         return u'%i %s %s' % (self.id, self.group, self.user)
         

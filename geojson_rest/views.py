@@ -10,8 +10,8 @@ from geonition_utils.http import HttpResponseForbidden
 from geonition_utils.http import HttpResponseNotFound
 from geonition_utils.http import HttpResponseUnauthorized
 from geonition_utils.views import RequestHandler
-from models import Feature
-from models import Property
+from geojson_rest.models import Feature
+from geojson_rest.models import Property
 
 class FeatureView(RequestHandler):
 
