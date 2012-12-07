@@ -191,7 +191,7 @@ class PropertyView(RequestHandler):
         if user == None:
             return HttpResponseBadRequest('You need to create a session before creating properties')
         elif user != request.user:
-            return HttpResponseBadRequest('You cannot create properties for other users')
+            return HttpResponseForbidden('You cannot create properties for other users')
         
         json_obj_response = {}
         new_property = Property(user = user,
@@ -223,22 +223,22 @@ class PropertyView(RequestHandler):
             user = '@me',
             group = '@self',
             feature = None,
-            property = None):
+            prop = None):
         
-        if property == None:
+        if prop == None:
             return HttpResponseBadRequest("You need to provide a property id "
                                           "to make this request")
         else:
             json_object = json.loads(request.body)
             user = get_user(request, user)
             if user == request.user:
-                property = Property.objects.get(id = property,
-                                                user = user)
-                property.update(json_object)
+                prop = Property.objects.get(id = prop,
+                                            user = user)
+                prop.update(json_object)
             else:
                 return HttpResponseForbidden('You cannot update others properties')
         
-        return HttpResponse(json.dumps(property.to_json()))
+        return HttpResponse(json.dumps(prop.to_json()))
     
     def delete(self,
             request,
@@ -249,6 +249,8 @@ class PropertyView(RequestHandler):
         
         if property == None:
             return HttpResponseBadRequest('you need to provide a property id')
+        elif not request.user.is_authenticated():
+            return HttpResponseForbidden('You need to sign in to delete properties')
         else:
             Property.objects.get(id = property).delete()
         
