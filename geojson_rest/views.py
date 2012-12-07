@@ -223,22 +223,22 @@ class PropertyView(RequestHandler):
             user = '@me',
             group = '@self',
             feature = None,
-            prop = None):
+            property = None):
         
-        if prop == None:
+        if property == None:
             return HttpResponseBadRequest("You need to provide a property id "
                                           "to make this request")
         else:
             json_object = json.loads(request.body)
             user = get_user(request, user)
             if user == request.user:
-                prop = Property.objects.get(id = prop,
+                property = Property.objects.get(id = property,
                                             user = user)
-                prop.update(json_object)
+                property.update(json_object)
             else:
                 return HttpResponseForbidden('You cannot update others properties')
         
-        return HttpResponse(json.dumps(prop.to_json()))
+        return HttpResponse(json.dumps(property.to_json()))
     
     def delete(self,
             request,
