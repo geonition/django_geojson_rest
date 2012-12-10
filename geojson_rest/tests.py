@@ -247,6 +247,46 @@ class GeoRESTTest(TestCase):
                           403,
                           'The response was not a 403 for updating another user feature. response was %s: %s' % 
                           (str(response.status_code), response.content))
+        
+    def test_add_property_to_another_users_feature(self):
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+        
+        new_feature = self.create_feature()
+        new_feature.update({
+            'properties': {'first': False,
+                           'second': "test string"}
+            })
+        response = self.client.post(reverse('feat'),
+                                    json.dumps(new_feature),
+                                    content_type = 'application/json')
+
+        response_dict = json.loads(response.content)
+        feature_id = response_dict['id']
+
+        new_feature.update({
+            'properties': {'first': True,
+                           'third': 657677}
+            })
+
+        #test with no session
+        #This crashes by design decision
+#        self.client.logout()
+#        response = self.client.put(reverse('feat') + '/@me/@self/' + str(feature_id),
+#                                    json.dumps(new_feature),
+#                                    content_type = 'application/json')
+#        
+#        self.assertEqual(response.status_code,
+#                          403,
+#                          'The response was not a 403 for not signed in user')
+        
+        self.client.logout()
+        #login another user
+        self.client.login(username = 'user2',
+                          password = 'passwd')
+        
+
 
         response = self.client.put(reverse('feat') + '/@me/@self/' + str(feature_id),
                                     json.dumps(new_feature),
@@ -268,7 +308,7 @@ class GeoRESTTest(TestCase):
         self.assertEqual(len(feature_properties),
                          2,
                          'Only one set of properties returned.')
-        
+
     def test_unauthorized_property_get(self):
         #login the user
         self.client.login(username = 'user1',
@@ -362,8 +402,8 @@ class GeoRESTTest(TestCase):
         response_dict = json.loads(response.content)
 
         self.assertEqual(response.status_code,
-                          404,
-                          'response was not 404 for creating a property to another user. response was %s: %s' % 
+                          403,
+                          'response was not 403 for creating a property to another user. response was %s: %s' % 
                           (str(response.status_code), response.content))
 
     def test_unauthorized_property_put(self):
@@ -395,8 +435,8 @@ class GeoRESTTest(TestCase):
                                     content_type = 'application/json')
         
         self.assertEqual(response.status_code,
-                          404,
-                          'The response was not a 404 for updating another user property. response was %s: %s' % 
+                          403,
+                          'The response was not a 403 for updating another user property. response was %s: %s' % 
                           (str(response.status_code), response.content))
 
     def test_delete_other_users_property(self):
@@ -431,7 +471,7 @@ class GeoRESTTest(TestCase):
                           'Trying to delete other users property did actually delete the feature')
         
 
-    def test_add_and_delete_property_to_feature(self):
+    def test_add_and_delete_property_connected_to_feature(self):
         #login the user
         self.client.login(username = 'user1',
                           password = 'passwd')
@@ -464,7 +504,7 @@ class GeoRESTTest(TestCase):
         new_property.update({'first': 'second',
                         'second': False})
         
-        response = self.client.put(reverse('prop') + '/@me/@self/' + str(feature_id) + "/" + str(property_id),
+        response = self.client.put(reverse('prop') + '/@me/@self/' + str(feature_id) + '/' + str(property_id),
                                     json.dumps(new_property),
                                     content_type = 'application/json')
         
@@ -476,6 +516,17 @@ class GeoRESTTest(TestCase):
         prop = response_dict['features'][0]['properties']
         self.assertEqual(prop['first'], 'second', 'property did not get updated')
         
+        # delete the property without feature_id
+        response = self.client.delete(reverse('prop') + '/@me/@self/@null/' + str(property_id))
+        self.assertEqual(response.status_code,
+                          200,
+                          'The response was not a 200. Delete with feature id was not succesfull')
+        # get the feature
+        response = self.client.get(reverse('feat') + "/@me/@self/" + str(feature_id))
+        response_dict = json.loads(response.content)
+        prop = response_dict['features'][0]['properties']
+        self.assertEqual(prop['first'], 'second', 'property did not get deleted')
+
         # delete the property
         response = self.client.delete(reverse('prop') + '/@me/@self/' + str(feature_id) + "/" + str(property_id))
         self.assertEqual(response.status_code,
@@ -1147,21 +1198,13 @@ class GeoRESTAdminTest(TestCase):
                           0,
                           'the polygonfeature was not deleted')
 
-    def test_delete_property(self):
+    def test_delete_property_not_connected_to_feature(self):
         new_feature = self.create_feature(prop_dict={'first': False}, geom_type='Polygon')
 
         #login the user
         self.client.login(username = 'user1',
                           password = 'passwd')
         
-
-        #save the feature
-        response = self.client.post(reverse('feat'),
-                                    json.dumps(new_feature),
-                                    content_type = 'application/json')
-        response_dict = json.loads(response.content)
-        feat_id = response_dict['id']
-        property_connected_to_feature_id = response_dict['properties']['id']
 
         #create property without feature
         response = self.client.post(reverse('prop') + '/@me/@self/@null',
@@ -1178,14 +1221,62 @@ class GeoRESTAdminTest(TestCase):
         #Test delete property not connected to feature
         response = self.client.post(reverse('admin:geojson_rest_property_delete', args=(property_id,)),
                                     postdata)
+        self.assertEqual(response.status_code,
+                          302,
+                          "Deleting a property did not return status code 302")
+        
         response = self.client.get(response['Location'])
+        self.assertEqual(response.status_code,
+                          200,
+                          "Deleting a property redirect did not work")
 
-        self.assertContains(response, 'The property &quot;%s @self user1&quot; was deleted successfully.' % property_id)
+        response = self.client.get('%s/@me/@self/@null/%i' % (reverse('prop'),
+                                                                   property_id))
 
+        self.assertEquals(response.status_code,
+                          404,
+                          'Querying a deleted property did not return not found')
+        
+    @skip("When property is connected to feature, django tries to delete from database view\
+           because of the m2m field") 
+    def test_delete_property_connected_to_feature(self):
+        new_feature = self.create_feature(prop_dict={'first': False}, geom_type='Polygon')
+
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+        
+
+        #save the feature
+        response = self.client.post(reverse('feat'),
+                                    json.dumps(new_feature),
+                                    content_type = 'application/json')
+        response_dict = json.loads(response.content)
+        feat_id = response_dict['id']
+        property_connected_to_feature_id = response_dict['properties']['id']
+
+        self.client.logout()
+        
+        self.client.login(username = 'admin', password = 'passwd')
+
+        postdata = {'post' : 'yes'}
+        
         #Test delete property connected to feature
         response = self.client.post(reverse('admin:geojson_rest_property_delete', args=(property_connected_to_feature_id,)),
                                     postdata)
+        self.assertEqual(response.status_code,
+                          302,
+                          "Deleting a property did not return status code 302")
+        
         response = self.client.get(response['Location'])
+        self.assertEqual(response.status_code,
+                          200,
+                          "Deleting a property redirect did not work")
 
-        self.assertContains(response, 'The property &quot;%s @self user1&quot; was deleted successfully.' % property_connected_to_feature_id)
-                
+        response = self.client.get('%s/@me/@self/@null/%i' % (reverse('prop'),
+                                                                   property_connected_to_feature_id))
+
+        self.assertEquals(response.status_code,
+                          404,
+                          'Querying a deleted property did not return not found')
+
