@@ -2,12 +2,15 @@ from django.db import models
 from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.contrib.gis.db import models as gismodels
-from django.contrib.gis.gdal import OGRGeometry
+#from django.contrib.gis.gdal import OGRGeometry
+from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.auth.models import User
 from django.utils import simplejson as json
 from django.utils.translation import ugettext_lazy as _
 from geonition_utils.models import JSON
 from geonition_utils.models import TimeD
+
+from shapely.geometry import asShape
 
 class Property(models.Model):
     """
@@ -168,7 +171,12 @@ class Feature(FeatureBase):
         }
         """
         #TODO do not use GDAL
-        self.geometry = OGRGeometry(json.dumps(feature['geometry'])).geos
+#        self.geometry = OGRGeometry(json.dumps(feature['geometry'])).geos
+#        self.geometry = GEOSGeometry(json.dumps(feature['geometry']))
+        # There is a problem with GDAL from_json routine
+        # so we use shapely library to circumvent the problem.
+        temp_geom = asShape(feature['geometry'])
+        self.geometry = GEOSGeometry(temp_geom.to_wkt())
         self.private = feature.get('private', True)
         timed = TimeD()
         timed.save()
