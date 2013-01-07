@@ -8,6 +8,8 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
 
+from shapely.geometry import asShape
+
 def download_csv(modeladmin, request, queryset):
     """
     This action will modify the queryset objects into
@@ -40,7 +42,10 @@ def download_csv(modeladmin, request, queryset):
             
             #handle the geometry geojson and present it as WKT
             if selector == 'geometry':
-                value = GEOSGeometry(json.dumps(value[selector])).wkt
+#                value = GEOSGeometry(json.dumps(value[selector])).wkt
+                # All geometry from/to_json functions in GeoDjango use 
+                # gdal and from_json has some problems. We use Shapely instead.
+                value = asShape(value[selector]).to_wkt()
             else:   
                 split_selector = selector.split('.')
             
