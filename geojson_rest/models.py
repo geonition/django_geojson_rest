@@ -75,6 +75,9 @@ class Property(models.Model):
         
     class Meta:
         unique_together = ('json_data', 'user', 'time')
+        permissions = (
+                ('can_view_private', 'Can view private properties'),
+                )
 
 
 class FeatureBase(gismodels.Model):
@@ -141,6 +144,9 @@ class FeatureBase(gismodels.Model):
     
     class Meta:
         abstract = True
+        permissions = (
+                ('can_view_private', 'Can view private features'),
+                )
     
 
 class Feature(FeatureBase):

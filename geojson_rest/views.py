@@ -73,10 +73,13 @@ class FeatureView(RequestHandler):
             features = features.exclude(user = request.user)
             
         else: # user is @all
-            own_features = features.filter(user = request.user)
-            others_features = features.filter(private = False)
-            others_features = others_features.exclude(user = request.user)
-            features = own_features | others_features
+            if request.user and request.user.has_perm('geodjango_rest.can_view_private'):
+                pass
+            else:
+                own_features = features.filter(user = request.user)
+                others_features = features.filter(private = False)
+                others_features = others_features.exclude(user = request.user)
+                features = own_features | others_features
                 
         
         if len(features) > 0:
