@@ -75,6 +75,9 @@ class Property(models.Model):
         
     class Meta:
         unique_together = ('json_data', 'user', 'time')
+        permissions = (
+                ('can_view_private', 'Can view private properties'),
+                )
 
 
 class FeatureBase(gismodels.Model):
@@ -90,7 +93,7 @@ class FeatureBase(gismodels.Model):
     """
     user = models.ForeignKey(User)
     group = models.CharField(default = '@self', max_length = 50)
-    private = models.BooleanField(default = False)
+    private = models.BooleanField(default = True)
     time = models.OneToOneField(TimeD)
 
     objects = gismodels.GeoManager()
@@ -141,6 +144,9 @@ class FeatureBase(gismodels.Model):
     
     class Meta:
         abstract = True
+        permissions = (
+                ('can_view_private', 'Can view private features'),
+                )
     
 
 class Feature(FeatureBase):
@@ -197,7 +203,7 @@ class Feature(FeatureBase):
         properties -- can be updated by all (saved separate per user)
         """
         if self.user == user:
-            self.private = feature.get('private', False)
+            self.private = feature.get('private', True)
             old_property = self.properties.get(user = user)
             old_property.update(feature['properties'])
             self.save(*args, **kwargs)
@@ -206,7 +212,8 @@ class Feature(FeatureBase):
                 old_property = self.properties.get(user = user)
                 old_property.update(feature['properties'])
             except Property.DoesNotExist:
-                prop = Property()
+                prop = Property(user = user,
+                                group = self.group)
                 prop.create(feature['properties'], user)
                 self.properties.add(prop)
 
