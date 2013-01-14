@@ -7,6 +7,7 @@ import types
 from django.contrib.gis.geos import GEOSGeometry
 from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
 
 from shapely.geometry import asShape
 
@@ -20,9 +21,14 @@ def download_csv(modeladmin, request, queryset):
     Special reserved values include
     geometry - should represent a geojson geometry otherwise skipped
     """
+    if len(queryset) > 0:
+        srid = queryset[0].geometry.srid
+    else:
+        srid = getattr(settings, "SPATIAL_REFERENCE_SYSTEM_ID", 4326)
+
     #make the response object to write to
     response = HttpResponse(mimetype='text/csv')
-    response['Content-Disposition'] = 'attachment; filename=%s.csv' % str(modeladmin)
+    response['Content-Disposition'] = 'attachment; filename={0}_{1}.csv'.format(modeladmin, srid)
     
     #create a csv writer
     writer = csv.writer(response)
