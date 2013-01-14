@@ -168,6 +168,7 @@ class Feature(FeatureBase):
         {
         "type": "Feature",
         "geometry": ...,
+        "crs": ...,
         "properties": ...,
         "id": ...,
         "private": ...,
@@ -182,7 +183,16 @@ class Feature(FeatureBase):
         # There is a problem with GDAL from_json routine
         # so we use shapely library to circumvent the problem.
         temp_geom = asShape(feature['geometry'])
-        self.geometry = GEOSGeometry(temp_geom.to_wkt())
+        # Extract the Coordinate referense system of the feature
+        if 'crs' in feature.keys():
+            try:
+                feat_srid = int(feature['crs']['properties']['name'].split(':')[1])
+            except (IndexError, KeyError):
+                feat_srid = None
+        else:
+            feat_srid = None
+        print feat_srid
+        self.geometry = GEOSGeometry(temp_geom.to_wkt(), feat_srid)
         self.private = feature.get('private', True)
         timed = TimeD()
         timed.save()
