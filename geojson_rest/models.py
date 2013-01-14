@@ -191,7 +191,6 @@ class Feature(FeatureBase):
                 feat_srid = None
         else:
             feat_srid = None
-        print feat_srid
         self.geometry = GEOSGeometry(temp_geom.to_wkt(), feat_srid)
         self.private = feature.get('private', True)
         timed = TimeD()
