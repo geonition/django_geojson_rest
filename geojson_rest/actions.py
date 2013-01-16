@@ -21,15 +21,19 @@ def download_csv(modeladmin, request, queryset):
     Special reserved values include
     geometry - should represent a geojson geometry otherwise skipped
     """
-    if len(queryset) > 0:
+    srid = None
+    if len(queryset) > 0 and hasattr(queryset[0], 'geometry'):
         srid = queryset[0].geometry.srid
     else:
         srid = getattr(settings, "SPATIAL_REFERENCE_SYSTEM_ID", 4326)
 
     #make the response object to write to
     response = HttpResponse(mimetype='text/csv')
-    response['Content-Disposition'] = 'attachment; filename={0}_{1}.csv'.format(modeladmin, srid)
-    
+    if srid is not None:
+        response['Content-Disposition'] = 'attachment; filename={0}_{1}.csv'.format(modeladmin, srid)
+    else:
+        response['Content-Disposition'] = 'attachment; filename={0}.csv'.format(modeladmin)
+        
     #create a csv writer
     writer = csv.writer(response)
     
@@ -38,7 +42,9 @@ def download_csv(modeladmin, request, queryset):
     
     #selector list is the header of the csv file
     selector_list = get_selectors(dict_list)
-    writer.writerow(selector_list)
+    # change column name 'geometry' to 'wkt' in csv header
+    csv_header = ['wkt' if x == 'geometry' else x for x in selector_list]    
+    writer.writerow(csv_header)
     
     for dict_json in dict_list:
         
