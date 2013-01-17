@@ -27,23 +27,23 @@ class FeatureView(RequestHandler):
             return HttpResponseUnauthorized("The request has to be made by a"
                                             "signed in user")
         
-        # we need srid of the questionnaire map
-        # Check if we have maps application installed, if not use geometry column srid
-        try:
-            from maps.models import Map
-            # At the moment questionnaires always use map named questionnaire map.
-            # This should not be hardcoded.
-            # If named map is not found we use geometry column srid.
-            map_srid = int(Map.objects.get(slug_name = 'questionnaire-map').projection)
-            #take initial all transformed to map coordinates
-            features = Feature.objects.all().transform(map_srid)
-        except (ImportError, ObjectDoesNotExist):
-            #take initial all
-            features = Feature.objects.all()
+#         # we need srid of the questionnaire map
+#         # Check if we have maps application installed, if not use geometry column srid
+#         try:
+#             from maps.models import Map
+#             # At the moment questionnaires always use map named questionnaire map.
+#             # This should not be hardcoded.
+#             # If named map is not found we use geometry column srid.
+#             map_srid = int(Map.objects.get(slug_name = 'questionnaire-map').projection)
+#             #take initial all transformed to map coordinates
+#             features = Feature.objects.all().transform(map_srid)
+#         except (ImportError, ObjectDoesNotExist):
+#             #take initial all
+#             features = Feature.objects.all()
             
 
         #take initial all
-#        features = Feature.objects.all()
+        features = Feature.objects.all()
         
         #filter the ones that has feature_id feature
         if feature != None:
