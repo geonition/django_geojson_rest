@@ -18,6 +18,7 @@ setup(
     },
     install_requires=['django',
                       'psycopg2',
+                      'shapely',
                       'geonition_utils'],
     dependency_links = [
         'https://github.com/geonition/django_geonition_utils/tarball/4.0.1#egg=geonition_utils-4.0.1'

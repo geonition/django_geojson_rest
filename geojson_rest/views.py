@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils import simplejson as json
 from geonition_utils.exceptions import Http400
 from geonition_utils.http import HttpResponse
@@ -25,7 +26,22 @@ class FeatureView(RequestHandler):
         if not request.user.is_authenticated():
             return HttpResponseUnauthorized("The request has to be made by a"
                                             "signed in user")
+        
+#         # we need srid of the questionnaire map
+#         # Check if we have maps application installed, if not use geometry column srid
+#         try:
+#             from maps.models import Map
+#             # At the moment questionnaires always use map named questionnaire map.
+#             # This should not be hardcoded.
+#             # If named map is not found we use geometry column srid.
+#             map_srid = int(Map.objects.get(slug_name = 'questionnaire-map').projection)
+#             #take initial all transformed to map coordinates
+#             features = Feature.objects.all().transform(map_srid)
+#         except (ImportError, ObjectDoesNotExist):
+#             #take initial all
+#             features = Feature.objects.all()
             
+
         #take initial all
         features = Feature.objects.all()
         
@@ -57,10 +73,13 @@ class FeatureView(RequestHandler):
             features = features.exclude(user = request.user)
             
         else: # user is @all
-            own_features = features.filter(user = request.user)
-            others_features = features.filter(private = False)
-            others_features = others_features.exclude(user = request.user)
-            features = own_features | others_features
+            if request.user and request.user.has_perm('geojson_rest.can_view_private'):
+                pass
+            else:
+                own_features = features.filter(user = request.user)
+                others_features = features.filter(private = False)
+                others_features = others_features.exclude(user = request.user)
+                features = own_features | others_features
                 
         
         if len(features) > 0:

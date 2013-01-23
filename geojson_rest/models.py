@@ -2,12 +2,15 @@ from django.db import models
 from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.contrib.gis.db import models as gismodels
-from django.contrib.gis.gdal import OGRGeometry
+#from django.contrib.gis.gdal import OGRGeometry
+from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.auth.models import User
 from django.utils import simplejson as json
 from django.utils.translation import ugettext_lazy as _
 from geonition_utils.models import JSON
 from geonition_utils.models import TimeD
+
+from shapely.geometry import asShape
 
 class Property(models.Model):
     """
@@ -72,6 +75,9 @@ class Property(models.Model):
         
     class Meta:
         unique_together = ('json_data', 'user', 'time')
+        permissions = (
+                ('can_view_private', 'Can view private properties'),
+                )
 
 
 class FeatureBase(gismodels.Model):
@@ -138,6 +144,9 @@ class FeatureBase(gismodels.Model):
     
     class Meta:
         abstract = True
+        permissions = (
+                ('can_view_private', 'Can view private features'),
+                )
     
 
 class Feature(FeatureBase):
@@ -159,6 +168,7 @@ class Feature(FeatureBase):
         {
         "type": "Feature",
         "geometry": ...,
+        "crs": ...,
         "properties": ...,
         "id": ...,
         "private": ...,
@@ -168,7 +178,20 @@ class Feature(FeatureBase):
         }
         """
         #TODO do not use GDAL
-        self.geometry = OGRGeometry(json.dumps(feature['geometry'])).geos
+#        self.geometry = OGRGeometry(json.dumps(feature['geometry'])).geos
+#        self.geometry = GEOSGeometry(json.dumps(feature['geometry']))
+        # There is a problem with GDAL from_json routine
+        # so we use shapely library to circumvent the problem.
+        temp_geom = asShape(feature['geometry'])
+        # Extract the Coordinate referense system of the feature
+        if 'crs' in feature.keys():
+            try:
+                feat_srid = int(feature['crs']['properties']['name'].split(':')[1])
+            except (IndexError, KeyError):
+                feat_srid = None
+        else:
+            feat_srid = None
+        self.geometry = GEOSGeometry(temp_geom.to_wkt(), feat_srid)
         self.private = feature.get('private', True)
         timed = TimeD()
         timed.save()
