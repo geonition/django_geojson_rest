@@ -941,7 +941,7 @@ class GeoRESTTest(TestCase):
 
     def test_download_csv_with_utf_8(self):
         feat1 = self.create_feature({u'first': u'äÄöÖåÅ€'})
-        feat2 = self.create_feature({u'second': u'Test'})
+        feat2 = self.create_feature({'secondä': u'Test'})
 
         #login the user
         self.client.login(username = 'user1',
@@ -991,7 +991,7 @@ class GeoRESTTest(TestCase):
                           'properties.user',
                           'properties.time.expire_time',
                           'properties.time.create_time',
-                          'properties.second'])
+                          'properties.secondä'])
 
         csv_lines.append(['@self',
                           'user1',
