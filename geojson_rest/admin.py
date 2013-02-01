@@ -44,7 +44,7 @@ class HasFeatureFilter(admin.SimpleListFilter):
             return queryset.filter(feature=None)
     
 class FeatureAdmin(admin.ModelAdmin):
-    search_fields = ('user', 'group',)
+    search_fields = ('user__username', 'group',)
     list_display = ('user',
                     'group')
     readonly_fields = ('user',
