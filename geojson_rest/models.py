@@ -69,6 +69,10 @@ class Property(models.Model):
     def delete(self, *args, **kwargs):
         super(Property, self).delete()
     
+    def get_create_time(self):
+        return self.time.create_time.strftime('%Y-%m-%d %H:%M')
+    get_create_time.short_description = 'Create time'
+    get_create_time.admin_order_field = 'time'
     
     def __unicode__(self):
         return u'%i %s %s' % (self.id, self.group, self.user)
@@ -142,6 +146,11 @@ class FeatureBase(gismodels.Model):
     def __unicode__(self):
         return u'%i %s %s' % (self.id, self.group, self.user)
     
+    def get_create_time(self):
+        return self.time.create_time.strftime('%Y-%m-%d %H:%M')
+    get_create_time.short_description = 'Create time'
+    get_create_time.admin_order_field = 'time'
+
     class Meta:
         abstract = True
         permissions = (

@@ -44,15 +44,17 @@ class HasFeatureFilter(admin.SimpleListFilter):
             return queryset.filter(feature=None)
     
 class FeatureAdmin(admin.ModelAdmin):
-    search_fields = ('user__username', 'group',)
+    search_fields = ('user__username', 'group', 'time__create_time')
     list_display = ('user',
-                    'group')
+                    'group',
+                    'get_create_time')
     readonly_fields = ('user',
                        'group',
                        'private',
                        'properties',
                        'time')
     list_filter = ('group', 'private',)
+    #date_hierarchy = ('time__create_time')
     actions = [download_csv]
     modifiable = False
     
@@ -147,9 +149,11 @@ class PolygonFeatureAdmin(gisadmin.OSMGeoAdmin, FeatureAdmin):
 admin.site.register(PolygonFeature, PolygonFeatureAdmin) 
 
 class PropertyAdmin(admin.ModelAdmin):
+    search_fields = ('user__username', 'group', 'time__create_time')
     list_display = ('group',
-                    'json_data',
-                    'user',)
+                    'user',
+                    'get_create_time',
+                    'json_data')
     readonly_fields = ('user',
                        'group',
                        'json_data',
