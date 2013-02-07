@@ -135,13 +135,13 @@ class PolygonFeatureAdmin(gisadmin.OSMGeoAdmin, FeatureAdmin):
         del actions['delete_selected']
         return actions
 
-    def delete_selected_routes(self, request, queryset):
+    def delete_selected_areas(self, request, queryset):
         for obj in queryset:
             obj.delete()
 
         self.message_user(request, _("successfully deleted areas."))
     
-    delete_selected_routes.short_description = _('delete selected areas')
+    delete_selected_areas.short_description = _('delete selected areas')
     
     def queryset(self, request):
         return self.model.objects.all()
