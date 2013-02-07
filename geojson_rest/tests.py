@@ -1200,6 +1200,49 @@ class GeoRESTAdminTest(TestCase):
                           0,
                           'the polygonfeature was not deleted')
 
+    def test_delete_polygonfeature_with_properties(self):
+
+        new_feature = self.create_feature(geom_type='Polygon')
+
+        #login the user
+        self.client.login(username = 'user1',
+                          password = 'passwd')
+
+        new_feature.update({
+            'properties': {'first': True,
+                           'second': 'Polygon'}
+            })
+
+        #save the feature
+        response = self.client.post(reverse('feat'),
+                                    json.dumps(new_feature),
+                                    content_type = 'application/json')
+        response_dict = json.loads(response.content)
+        feat_id = response_dict['id']
+
+        self.client.logout()
+
+        self.client.login(username = 'admin', password = 'passwd')
+        postdata = {'post' : 'yes'}
+
+        response = self.client.post(reverse('admin:geojson_rest_polygonfeature_delete', args=(feat_id,)),
+                                    postdata)
+        self.assertEqual(response.status_code,
+                          302,
+                          "Deleting a polygonfeature with properties did not return status code 302")
+
+        response = self.client.get(response['Location'])
+        self.assertEqual(response.status_code,
+                          200,
+                          "Deleting a polygonfeature with properties redirect did not work")
+
+        response = self.client.get(reverse('feat'))
+        response_json = json.loads(response.content)
+
+        self.assertEquals(len(response_json['features']),
+                          0,
+                          'the polygonfeature with properties was not deleted')
+
     def test_delete_property_not_connected_to_feature(self):
         new_feature = self.create_feature(prop_dict={'first': False}, geom_type='Polygon')
 
