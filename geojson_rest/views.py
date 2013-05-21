@@ -73,7 +73,7 @@ class FeatureView(RequestHandler):
             features = features.exclude(user = request.user)
             
         else: # user is @all
-            if request.user and request.user.has_perm('geojson_rest.can_view_private'):
+            if request.user and request.user.is_staff:
                 pass
             else:
                 own_features = features.filter(user = request.user)
