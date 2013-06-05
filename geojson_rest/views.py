@@ -100,6 +100,7 @@ class FeatureView(RequestHandler):
             user = '@me',
             group = '@self',
             feature = None):
+        group = group[:50]
         
         # load the json and validate format
         json_object = json.loads(request.body)
@@ -130,6 +131,7 @@ class FeatureView(RequestHandler):
             user = '@me',
             group = '@self',
             feature = None):
+        group = group[:50]
         
         if feature == None:
             return HttpResponseBadRequest('You need to provide a feature id')
@@ -202,6 +204,7 @@ class PropertyView(RequestHandler):
             user = '@me',
             group = '@self',
             feature = '@null'):
+        group = group[:50]
         
         # load the json and validate format
         json_object = json.loads(request.body)
@@ -243,6 +246,7 @@ class PropertyView(RequestHandler):
             group = '@self',
             feature = None,
             property = None):
+        group = group[:50]
         
         if property == None:
             return HttpResponseBadRequest("You need to provide a property id "
