@@ -744,11 +744,11 @@ class GeoRESTTest(TestCase):
                                                            feature_id,
                                                            property_id))
         self.assertEquals(response.status_code,
-                          200,
-                          "Querying a property did not return status code 200")
-        self.assertEquals(json.loads(response.content)['group'],
-                          '@self',
-                          'The property did not belong to @self group')
+                          404,
+                          "Querying a property did not return status code 404, returned: %s" % response.status_code)
+#         self.assertEquals(json.loads(response.content)['group'],
+#                           '@self',
+#                           'The property did not belong to @self group')
 
 
         #create property without feature to group 'test_group'
@@ -766,13 +766,18 @@ class GeoRESTTest(TestCase):
                                                                    property_id))
         self.assertEquals(response.status_code,
                           200,
-                          "Querying a property did not return status code 200")
+                          "Querying a property did not return status code 200, returned: %s" % response.status_code)
         self.assertEquals(json.loads(response.content)['group'],
                           'test_group',
                           'The property did not belong to test_group group')
 
+        #create another property to test multiple properties
+        response = self.client.post(reverse('prop') + '/@me/test_group/@null',
+                                    json.dumps({'another': 'first saved'}),
+                                    content_type = 'application/json')
         #query all user1 properties
         response = self.client.get('%s/user1' % reverse('prop'))
+#        import ipdb;ipdb.set_trace()
         self.assertTrue(json.loads(response.content).has_key('totalResults'),
                         'The returned collection did not have key totalResults')
         self.assertTrue(json.loads(response.content).has_key('entry'),
@@ -1244,7 +1249,7 @@ class GeoRESTAdminTest(TestCase):
                           'the polygonfeature with properties was not deleted')
 
     def test_delete_property_not_connected_to_feature(self):
-        new_feature = self.create_feature(prop_dict={'first': False}, geom_type='Polygon')
+        #new_feature = self.create_feature(prop_dict={'first': False}, geom_type='Polygon')
 
         #login the user
         self.client.login(username = 'user1',
