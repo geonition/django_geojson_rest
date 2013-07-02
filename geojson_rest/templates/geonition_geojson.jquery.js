@@ -1,3 +1,4 @@
+{% load url from future %}
 /*
  javascript functions for the geojson_rest app
 */
