@@ -33,7 +33,7 @@ function(user, group, limit_params, ajax_params) {
     var kwargs = $.extend(
         ajax_params,
         {
-            url: "{% url feat %}/" + user + "/" + group + limit_params,
+            url: "{% url 'feat' %}/" + user + "/" + group + limit_params,
             type: "GET",
             contentType: "application/json",
             dataType: "json",
@@ -72,7 +72,7 @@ function(user, group, feature_id, ajax_params) {
     var kwargs = $.extend(
         ajax_params,
         {
-            url: "{% url feat %}/" + user + "/" + group + "/" + feature_id,
+            url: "{% url 'feat' %}/" + user + "/" + group + "/" + feature_id,
             type: "GET",
             contentType: "application/json",
             dataType: "json",
@@ -125,7 +125,7 @@ function(user, group, feature, ajax_params) {
     var kwargs = $.extend(
         ajax_params,
         {
-            url: "{% url feat %}/" + user + "/" + group,
+            url: "{% url 'feat' %}/" + user + "/" + group,
             type: "POST",
             data: geojson_string,
             contentType: "application/json",
@@ -172,7 +172,7 @@ function(user, group, feature, ajax_params) {
     var kwargs = $.extend(
         ajax_params,
         {
-            url: "{% url feat %}/" + user + "/" + group + "/" + feature_id,
+            url: "{% url 'feat' %}/" + user + "/" + group + "/" + feature_id,
             type: "PUT",
             data: geojson_string,
             contentType: "application/json",
@@ -214,7 +214,7 @@ function(user, group, feature, ajax_params) {
     var kwargs = $.extend(
         ajax_params,
         {
-            url: "{% url feat %}/" + user + "/" + group + "/" + feature_id,
+            url: "{% url 'feat' %}/" + user + "/" + group + "/" + feature_id,
             type: "DELETE",
             contentType: "application/json",
             dataType: "json",
@@ -263,7 +263,7 @@ function(user, group, feature_id, property, ajax_params) {
     var kwargs = $.extend(
         ajax_params,
         {
-            url: "{% url prop %}/" + user + "/" + group + "/" + feature_id,
+            url: "{% url 'prop' %}/" + user + "/" + group + "/" + feature_id,
             type: "POST",
             contentType: "application/json",
             dataType: "json",
@@ -317,7 +317,7 @@ function(user, group, feature_id, property, ajax_params) {
     var kwargs = $.extend(
         ajax_params,
         {
-            url: "{% url prop %}/" + user + "/" + group + "/" + feature_id + "/" + property_id,
+            url: "{% url 'prop' %}/" + user + "/" + group + "/" + feature_id + "/" + property_id,
             type: "PUT",
             contentType: "application/json",
             dataType: "json",
@@ -368,7 +368,7 @@ gnt.geo.get_properties = function(user,
     var kwargs = $.extend(
         ajax_params,
         {
-            url: "{% url prop %}/" + user + "/" + group + "/" + feature_id + "/" + property_id,
+            url: "{% url 'prop' %}/" + user + "/" + group + "/" + feature_id + "/" + property_id,
             type: "GET",
             contentType: "application/json",
             dataType: "json",
