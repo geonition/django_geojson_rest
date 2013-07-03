@@ -57,7 +57,6 @@ class FeatureAdmin(gisadmin.OSMGeoAdmin):
     list_filter = ('group', 'private',)
     openlayers_url = '%s%s' % (getattr(settings, 'STATIC_URL', '/'),
                                'js/libs/OpenLayers.js')
-    extra_js = (reverse_lazy('osmextra'),)
     actions = [download_csv]
     modifiable = False
     actions = ['delete_selected']
