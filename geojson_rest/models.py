@@ -61,7 +61,7 @@ class Property(models.Model):
         retval = self.json_data.json()
         retval.update({'time': {'create_time': self.time.create_time.isoformat(),
                                 'expire_time': exrtime},
-                        'user': self.user.id,
+                        'user': self.user.username,
                         'id': self.id,
                         'group': self.group })
         return retval
@@ -132,7 +132,7 @@ class FeatureBase(gismodels.Model):
             'type': 'Feature',
             'time': {'create_time': self.time.create_time.isoformat(),
                      'expire_time': exrtime},
-            'user': self.user.id,
+            'user': self.user.username,
             'group': self.group
         }
 
