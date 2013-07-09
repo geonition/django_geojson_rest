@@ -4,9 +4,10 @@ from django.core.urlresolvers import reverse_lazy
 from django.contrib import admin
 from django.contrib.gis import admin as gisadmin
 from django.utils.translation import ugettext_lazy as _
-from geojson_rest.models import PointFeature
-from geojson_rest.models import LinestringFeature
-from geojson_rest.models import PolygonFeature
+# from geojson_rest.models import PointFeature
+# from geojson_rest.models import LinestringFeature
+# from geojson_rest.models import PolygonFeature
+from geojson_rest.models import Feature
 from geojson_rest.models import Property
 
 class HasFeatureFilter(admin.SimpleListFilter):
@@ -43,7 +44,7 @@ class HasFeatureFilter(admin.SimpleListFilter):
         if self.value() == 'nofeature':
             return queryset.filter(feature=None)
     
-class FeatureAdmin(admin.ModelAdmin):
+class FeatureAdmin(gisadmin.OSMGeoAdmin):
     search_fields = ('user__username', 'group', 'time__create_time')
     list_display = ('user',
                     'group',
@@ -54,99 +55,25 @@ class FeatureAdmin(admin.ModelAdmin):
                        'properties',
                        'time')
     list_filter = ('group', 'private',)
-    #date_hierarchy = ('time__create_time')
+    openlayers_url = '%s%s' % (getattr(settings, 'STATIC_URL', '/'),
+                               'js/libs/OpenLayers.js')
     actions = [download_csv]
     modifiable = False
+    actions = ['delete_selected']
     
+
+    def delete_selected(self, request, queryset):
+        for obj in queryset:
+            obj.delete()
+ 
+        self.message_user(request, _("successfully deleted the selected features."))
+     
+    delete_selected.short_description = _('delete selected features')
     def __str__(self):
         return "Feature"
 
-class PointFeatureAdmin(gisadmin.OSMGeoAdmin, FeatureAdmin):
-    """
-    This is subclass for FeatureAdmin but handles only
-    point geometries.
-    """
-    
-    openlayers_url = '%s%s' % (getattr(settings, 'STATIC_URL', '/'),
-                               'js/libs/OpenLayers.js')
-    extra_js = (reverse_lazy('osmextra'),)
-    actions = ['delete_selected_places']
+admin.site.register(Feature, FeatureAdmin)
 
-    def get_actions(self, request):
-        actions = super(PointFeatureAdmin, self).get_actions(request)
-        del actions['delete_selected']
-        return actions
-
-    def delete_selected_places(self, request, queryset):
-        for obj in queryset:
-            obj.delete()
-
-        self.message_user(request, _("successfully deleted places."))
-    
-    delete_selected_places.short_description = _('delete selected places')
-    
-    def queryset(self, request):
-        return self.model.objects.all()
-        
-admin.site.register(PointFeature, PointFeatureAdmin)
-
-class LinestringFeatureAdmin(gisadmin.OSMGeoAdmin, FeatureAdmin):
-    """
-    This is subclass for FeatureAdmin but handles only
-    linestring geometries.
-    """
-    
-    openlayers_url = '%s%s' % (getattr(settings, 'STATIC_URL', '/'),
-                               'js/libs/OpenLayers.js')
-    extra_js = (reverse_lazy('osmextra'),)
-    actions = ['delete_selected_routes']
-
-    def get_actions(self, request):
-        actions = super(LinestringFeatureAdmin, self).get_actions(request)
-        del actions['delete_selected']
-        return actions
-
-    def delete_selected_routes(self, request, queryset):
-        for obj in queryset:
-            obj.delete()
-
-        self.message_user(request, _("successfully deleted routes."))
-    
-    delete_selected_routes.short_description = _('delete selected routes')
-    
-    def queryset(self, request):
-        return self.model.objects.all()
-        
-admin.site.register(LinestringFeature, LinestringFeatureAdmin)
-
-class PolygonFeatureAdmin(gisadmin.OSMGeoAdmin, FeatureAdmin):
-    """
-    This is subclass for FeatureAdmin but handles only
-    polygon geometries.
-    """
-    
-    openlayers_url = '%s%s' % (getattr(settings, 'STATIC_URL', '/'),
-                               'js/libs/OpenLayers.js')
-    extra_js = (reverse_lazy('osmextra'),)
-    actions = ['delete_selected_areas']
-
-    def get_actions(self, request):
-        actions = super(PolygonFeatureAdmin, self).get_actions(request)
-        del actions['delete_selected']
-        return actions
-
-    def delete_selected_areas(self, request, queryset):
-        for obj in queryset:
-            obj.delete()
-
-        self.message_user(request, _("successfully deleted areas."))
-    
-    delete_selected_areas.short_description = _('delete selected areas')
-    
-    def queryset(self, request):
-        return self.model.objects.all()
-        
-admin.site.register(PolygonFeature, PolygonFeatureAdmin) 
 
 class PropertyAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'group', 'time__create_time')

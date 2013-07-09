@@ -52,7 +52,6 @@ class GeoRESTTest(TestCase):
     def create_feature_collection(self):
         return copy.deepcopy(self.base_featurecollection)
 
-#    @skip("Skipped to hasten test development")
     def test_unauthorized_feature_get(self):
         #login the user
         self.client.login(username = 'user1',
@@ -137,7 +136,6 @@ class GeoRESTTest(TestCase):
                           1,
                           'Querying user user2 features did not return any')
 
-#    @skip("These won't pass")
     def test_delete_other_users_feature(self):
         #login the user
         self.client.login(username = 'user1',
@@ -161,9 +159,6 @@ class GeoRESTTest(TestCase):
                           403,
                           'The response was not a 403, other users public feature might be deleted by not signed in user')
 
-#        self.assertNotEqual(response.content,
-#                            "A feature was deleted",
-#                            "A feature was really deleted" )
 
         #login the user1 back to check if feature was really deleted
         self.client.login(username = 'user1',
@@ -178,12 +173,6 @@ class GeoRESTTest(TestCase):
     def test_unauthorized_feature_post(self):
         #make a new feature to save
         new_feature = self.create_feature()
-#        response = self.client.post(reverse('feat'),
-#                                    json.dumps(new_feature),
-#                                    content_type = 'application/json')
-#        self.assertEqual(response.status_code,
-#                          400,
-#                          'The response was not a 400 for not signed in user')
 
 
         #login the user
@@ -191,7 +180,6 @@ class GeoRESTTest(TestCase):
                           password = 'passwd')
 
 
-        #reuse the same feature
         response = self.client.post(reverse('feat') + "/user2",
                                     json.dumps(new_feature),
                                     content_type = 'application/json')
@@ -471,8 +459,8 @@ class GeoRESTTest(TestCase):
         self.assertTrue(response_json.has_key('group'),
                           'Trying to delete other users property did actually delete the feature')
 
-    @skip("When property is connected to feature, django tries to delete from database view\
-           because of the m2m field. This gives a database error")
+#     @skip("When property is connected to feature, django tries to delete from database view\
+#            because of the m2m field. This gives a database error")
     def test_add_and_delete_property_connected_to_feature(self):
         #login the user
         self.client.login(username = 'user1',
@@ -527,20 +515,9 @@ class GeoRESTTest(TestCase):
         response = self.client.get(reverse('feat') + "/@me/@self/" + str(feature_id))
         response_dict = json.loads(response.content)
         prop = response_dict['features'][0]['properties']
-        self.assertEqual(prop['first'], 'second', 'property did not get deleted')
+        self.assertFalse('first' in prop, 'property did not get deleted')
 
-        # delete the property
-        response = self.client.delete(reverse('prop') + '/@me/@self/' + str(feature_id) + "/" + str(property_id))
-        self.assertEqual(response.status_code,
-                          200,
-                          'The response was not a 200. Delete with feature id was not succesfull')
-        # get the feature
-        response = self.client.get(reverse('feat') + "/@me/@self/" + str(feature_id))
-        response_dict = json.loads(response.content)
-        prop = response_dict['features'][0]['properties']
-        self.assertEqual(prop['first'], 'second', 'property did not get deleted')
 
-#    @skip("Skipped to hasten test development")
     def test_create_and_get_feature(self):
         #login the user
         self.client.login(username = 'user1',
@@ -641,10 +618,8 @@ class GeoRESTTest(TestCase):
             self.assertFalse(feat['private'],
                              'Querying all returned private features')
 
-        #logout
         self.client.logout()
 
-#    @skip("Skipped to hasten test development")
     def test_update_and_get_feature(self):
         self.client.login(username = 'user1',
                           password = 'passwd')
@@ -682,7 +657,6 @@ class GeoRESTTest(TestCase):
 
         self.assertFalse(response_json['features'][0]['properties']['first'])
 
-#    @skip("Skipped to hasten test development")
     def test_create_and_delete_feature(self):
         self.client.login(username = 'user1',
                           password = 'passwd')
@@ -714,7 +688,6 @@ class GeoRESTTest(TestCase):
                           0,
                           'the feature was not deleted')
 
-#    @skip("Skipped to hasten test development")
     def test_create_and_get_property(self):
         #login to the service
         self.client.login(username = 'user1',
@@ -744,11 +717,11 @@ class GeoRESTTest(TestCase):
                                                            feature_id,
                                                            property_id))
         self.assertEquals(response.status_code,
-                          200,
-                          "Querying a property did not return status code 200")
-        self.assertEquals(json.loads(response.content)['group'],
-                          '@self',
-                          'The property did not belong to @self group')
+                          404,
+                          "Querying a property did not return status code 404, returned: %s" % response.status_code)
+#         self.assertEquals(json.loads(response.content)['group'],
+#                           '@self',
+#                           'The property did not belong to @self group')
 
 
         #create property without feature to group 'test_group'
@@ -766,13 +739,18 @@ class GeoRESTTest(TestCase):
                                                                    property_id))
         self.assertEquals(response.status_code,
                           200,
-                          "Querying a property did not return status code 200")
+                          "Querying a property did not return status code 200, returned: %s" % response.status_code)
         self.assertEquals(json.loads(response.content)['group'],
                           'test_group',
                           'The property did not belong to test_group group')
 
+        #create another property to test multiple properties
+        response = self.client.post(reverse('prop') + '/@me/test_group/@null',
+                                    json.dumps({'another': 'first saved'}),
+                                    content_type = 'application/json')
         #query all user1 properties
         response = self.client.get('%s/user1' % reverse('prop'))
+#        import ipdb;ipdb.set_trace()
         self.assertTrue(json.loads(response.content).has_key('totalResults'),
                         'The returned collection did not have key totalResults')
         self.assertTrue(json.loads(response.content).has_key('entry'),
@@ -1081,7 +1059,7 @@ class GeoRESTAdminTest(TestCase):
 
 
 
-    def test_delete_pointfeature(self):
+    def test_delete_feature(self):
 
         new_feature = self.create_feature()
 
@@ -1101,150 +1079,27 @@ class GeoRESTAdminTest(TestCase):
 
         self.client.login(username = 'admin', password = 'passwd')
         postdata = {'post' : 'yes'}
-        #import ipdb; ipdb.set_trace()
-        response = self.client.post(reverse('admin:geojson_rest_pointfeature_delete', args=(feat_id,)),
+        response = self.client.post(reverse('admin:geojson_rest_feature_delete', args=(feat_id,)),
                                     postdata)
         self.assertEqual(response.status_code,
                           302,
-                          "Deleting a pointfeature did not return status code 302")
+                          "Deleting a feature did not return status code 302")
 
         response = self.client.get(response['Location'])
         self.assertEqual(response.status_code,
                           200,
-                          "Deleting a pointfeature redirect did not work")
+                          "Deleting a feature redirect did not work")
 
         response = self.client.get(reverse('feat'))
         response_json = json.loads(response.content)
 
         self.assertEquals(len(response_json['features']),
                           0,
-                          'the pointfeature was not deleted')
+                          'the feature was not deleted')
 
-
-    def test_delete_linestringfeature(self):
-
-        new_feature = self.create_feature(geom_type='LineString')
-
-        #login the user
-        self.client.login(username = 'user1',
-                          password = 'passwd')
-
-
-        #save the feature
-        response = self.client.post(reverse('feat'),
-                                    json.dumps(new_feature),
-                                    content_type = 'application/json')
-        response_dict = json.loads(response.content)
-        feat_id = response_dict['id']
-
-        self.client.logout()
-
-        self.client.login(username = 'admin', password = 'passwd')
-        postdata = {'post' : 'yes'}
-        #import ipdb; ipdb.set_trace()
-        response = self.client.post(reverse('admin:geojson_rest_linestringfeature_delete', args=(feat_id,)),
-                                    postdata)
-
-        self.assertEqual(response.status_code,
-                          302,
-                          "Deleting a linestringfeature did not return status code 302")
-
-        response = self.client.get(response['Location'])
-        self.assertEqual(response.status_code,
-                          200,
-                          "Deleting a linestringfeature redirect did not work")
-
-        response = self.client.get(reverse('feat'))
-        response_json = json.loads(response.content)
-
-        self.assertEquals(len(response_json['features']),
-                          0,
-                          'the linestringfeature was not deleted')
-
-    def test_delete_polygonfeature(self):
-
-        new_feature = self.create_feature(geom_type='Polygon')
-
-        #login the user
-        self.client.login(username = 'user1',
-                          password = 'passwd')
-
-
-        #save the feature
-        response = self.client.post(reverse('feat'),
-                                    json.dumps(new_feature),
-                                    content_type = 'application/json')
-        response_dict = json.loads(response.content)
-        feat_id = response_dict['id']
-
-        self.client.logout()
-
-        self.client.login(username = 'admin', password = 'passwd')
-        postdata = {'post' : 'yes'}
-        #import ipdb; ipdb.set_trace()
-        response = self.client.post(reverse('admin:geojson_rest_polygonfeature_delete', args=(feat_id,)),
-                                    postdata)
-        self.assertEqual(response.status_code,
-                          302,
-                          "Deleting a polygonfeature did not return status code 302")
-
-        response = self.client.get(response['Location'])
-        self.assertEqual(response.status_code,
-                          200,
-                          "Deleting a polygonfeature redirect did not work")
-
-        response = self.client.get(reverse('feat'))
-        response_json = json.loads(response.content)
-
-        self.assertEquals(len(response_json['features']),
-                          0,
-                          'the polygonfeature was not deleted')
-
-    def test_delete_polygonfeature_with_properties(self):
-
-        new_feature = self.create_feature(geom_type='Polygon')
-
-        #login the user
-        self.client.login(username = 'user1',
-                          password = 'passwd')
-
-        new_feature.update({
-            'properties': {'first': True,
-                           'second': 'Polygon'}
-            })
-
-        #save the feature
-        response = self.client.post(reverse('feat'),
-                                    json.dumps(new_feature),
-                                    content_type = 'application/json')
-        response_dict = json.loads(response.content)
-        feat_id = response_dict['id']
-
-        self.client.logout()
-
-        self.client.login(username = 'admin', password = 'passwd')
-        postdata = {'post' : 'yes'}
-
-        response = self.client.post(reverse('admin:geojson_rest_polygonfeature_delete', args=(feat_id,)),
-                                    postdata)
-        self.assertEqual(response.status_code,
-                          302,
-                          "Deleting a polygonfeature with properties did not return status code 302")
-
-        response = self.client.get(response['Location'])
-        self.assertEqual(response.status_code,
-                          200,
-                          "Deleting a polygonfeature with properties redirect did not work")
-
-        response = self.client.get(reverse('feat'))
-        response_json = json.loads(response.content)
-
-        self.assertEquals(len(response_json['features']),
-                          0,
-                          'the polygonfeature with properties was not deleted')
 
     def test_delete_property_not_connected_to_feature(self):
-        new_feature = self.create_feature(prop_dict={'first': False}, geom_type='Polygon')
+        #new_feature = self.create_feature(prop_dict={'first': False}, geom_type='Polygon')
 
         #login the user
         self.client.login(username = 'user1',
@@ -1282,8 +1137,8 @@ class GeoRESTAdminTest(TestCase):
                           404,
                           'Querying a deleted property did not return not found')
 
-    @skip("When property is connected to feature, django tries to delete from database view\
-           because of the m2m field. This gives a database error")
+#     @skip("When property is connected to feature, django tries to delete from database view\
+#            because of the m2m field. This gives a database error")
     def test_delete_property_connected_to_feature(self):
         new_feature = self.create_feature(prop_dict={'first': False}, geom_type='Polygon')
 
