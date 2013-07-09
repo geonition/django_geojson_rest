@@ -89,11 +89,14 @@ class FeatureView(RequestHandler):
             
         featurecollection = {
             'type': 'FeatureCollection',
-            'features': [feat.to_json() for feat in features],
+            'features': 'FEATURES',
             'crs': {"type": "name", "properties": {"code": "EPSG:%i" % srid}}
         }
-        
-        return HttpResponse(json.dumps(featurecollection))
+        collection_str = json.dumps(featurecollection)
+        collection_str = collection_str.replace(
+                '\"FEATURES\"',
+                '[' + ', '.join([feat.get_json_str() for feat in features]) + ']')
+        return HttpResponse(collection_str)
         
     def post(self,
             request,
@@ -195,9 +198,13 @@ class PropertyView(RequestHandler):
         else:
             property_collection = {
                 'totalResults': len(properties),
-                'entry': [prop.to_json() for prop in properties]
+                'entry': 'ENTRY'
             }
-            return HttpResponse(json.dumps(property_collection))
+            collection_str = json.dumps(property_collection)
+            collection_str = collection_str.replace(
+                    '\"ENTRY\"',
+                    '[' + ', '.join([prop.get_json_str() for prop in properties]) + ']')
+            return HttpResponse(collection_str)
     
     def post(self,
             request,

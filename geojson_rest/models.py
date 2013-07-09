@@ -32,6 +32,14 @@ class Property(models.Model):
     
     json_data = models.OneToOneField(JSON)
     time = models.OneToOneField(TimeD)
+    json_str = models.TextField(blank=True)
+
+    def get_json_str(self):
+        if self.json_str:
+            return self.json_str
+        self.json_str = json.dumps(self.to_json())
+        self.save()
+        return self.json_str
 
     def create(self, properties, *args, **kwargs):
         """
@@ -46,11 +54,19 @@ class Property(models.Model):
         self.time = timed
         super(Property, self).save(*args, **kwargs)
 
+        # kind of a cache for json
+        self.json_str = json.dumps(self.to_json())
+        super(Property, self).save(*args, **kwargs)
+
     def update(self, properties, *args, **kwargs):
         new_json = json.loads(self.json_data.json_string)
         new_json.update(properties)
         self.json_data.json_string = json.dumps(new_json)
         self.json_data.save()
+
+        # kind of a cache for json
+        self.json_str = json.dumps(self.to_json())
+        super(Property, self).save(*args, **kwargs)
 
     def to_json(self):
         if self.time.expire_time == None:
@@ -158,8 +174,16 @@ class Feature(FeatureBase):
     this inherits form base and is the model
     that should be used for crud functionality
     """
+    json_str = models.TextField(blank=True)
     geometry = gismodels.GeometryField(srid = getattr(settings, 'SPATIAL_REFERENCE_SYSTEM_ID', 4326))
     properties = models.ManyToManyField(Property)
+
+    def get_json_str(self):
+        if self.json_str:
+            return self.json_str
+        self.json_str = json.dumps(self.to_json())
+        self.save()
+        return self.json_str
 
     def create(self, feature, *args, **kwargs):
         """
@@ -206,6 +230,10 @@ class Feature(FeatureBase):
         super(Feature, self).save(*args, **kwargs)
         self.properties.add(prop)
 
+        # kind of a cache for json
+        self.json_str = json.dumps(self.to_json())
+        super(Feature, self).save(*args, **kwargs)
+
     def update(self, feature, user, *args, **kwargs):
         """
         This function updates the feature, user indicates
@@ -220,6 +248,7 @@ class Feature(FeatureBase):
             old_property = self.properties.get(user = user)
             old_property.update(feature['properties'])
             self.save(*args, **kwargs)
+
         else:
             try:
                 old_property = self.properties.get(user = user)
@@ -229,4 +258,7 @@ class Feature(FeatureBase):
                                 group = self.group)
                 prop.create(feature['properties'], user)
                 self.properties.add(prop)
+        # kind of a cache for json
+        self.json_str = json.dumps(self.to_json())
+        self.save(*args, **kwargs)
 
