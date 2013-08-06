@@ -949,7 +949,7 @@ class GeoRESTTest(TestCase):
 
         f_admin= FeatureAdmin(Feature,1)
         request = ""
-        features = Feature.objects.all()
+        features = Feature.objects.all().order_by('pk')
         csv_response = download_csv(f_admin, request, features)
 
 
