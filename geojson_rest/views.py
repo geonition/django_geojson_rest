@@ -229,8 +229,10 @@ class PropertyView(RequestHandler):
         
         uri = ""
         if feature != '@null': #connect feature to property
-            Feature.objects.get(id = feature,
-                               group = group).properties.add(new_property)
+            feat = Feature.objects.get(id = feature, group = group)
+            feat.properties.add(new_property)
+            #update features JSON cache
+            feat.update_json_str()
             uri = "%s/%s/%s/%s/%i" % (reverse('prop'),
                                       user.username,
                                       group,
@@ -265,6 +267,9 @@ class PropertyView(RequestHandler):
                 property = Property.objects.get(id = property,
                                             user = user)
                 property.update(json_object)
+                if property.feature_set.count() > 0: #update features connected to property
+                    for feat in property.feature_set.all():
+                        feat.update_json_str()
             else:
                 return HttpResponseForbidden('You cannot update others properties')
         
@@ -282,7 +287,12 @@ class PropertyView(RequestHandler):
         elif not request.user.is_authenticated():
             return HttpResponseForbidden('You need to sign in to delete properties')
         else:
-            Property.objects.get(id = property).delete()
+            property = Property.objects.get(id = property)
+            if property.feature_set.count() > 0: #delete property from connected features 
+                for feat in property.feature_set.all():
+                    feat.properties.remove(property)
+                    feat.update_json_str()
+            property.delete()
         
         return HttpResponse("A property was deleted")
 

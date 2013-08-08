@@ -184,6 +184,15 @@ class Feature(FeatureBase):
         self.json_str = json.dumps(self.to_json())
         self.save()
         return self.json_str
+    
+    def update_json_str(self):
+        if self.json_str != json.dumps(self.to_json()):
+            self.json_str = json.dumps(self.to_json())
+            self.save()
+            return True
+        else:
+            return False
+            
 
     def create(self, feature, *args, **kwargs):
         """
