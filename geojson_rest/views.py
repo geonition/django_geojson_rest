@@ -181,7 +181,7 @@ class PropertyView(RequestHandler):
         properties = [] #default empty list
         
         #query the most restrictive first
-        properties = Property.objects.filter(feature=None)
+        properties = Property.objects.filter(feature=None,group=group)
         if property != None and property != '@all':
             properties = properties.filter(id = property)
             
