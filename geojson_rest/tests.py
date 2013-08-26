@@ -510,7 +510,7 @@ class GeoRESTTest(TestCase):
         response = self.client.delete(reverse('prop') + '/@me/@self/@null/' + str(property_id))
         self.assertEqual(response.status_code,
                           200,
-                          'The response was not a 200. Delete with feature id was not succesfull')
+                          'The response was not a 200. Delete without feature id was not succesfull')
         # get the feature
         response = self.client.get(reverse('feat') + "/@me/@self/" + str(feature_id))
         response_dict = json.loads(response.content)
@@ -750,7 +750,6 @@ class GeoRESTTest(TestCase):
                                     content_type = 'application/json')
         #query all user1 properties
         response = self.client.get('%s/user1' % reverse('prop'))
-#        import ipdb;ipdb.set_trace()
         self.assertTrue(json.loads(response.content).has_key('totalResults'),
                         'The returned collection did not have key totalResults')
         self.assertTrue(json.loads(response.content).has_key('entry'),
@@ -837,7 +836,7 @@ class GeoRESTTest(TestCase):
 
         f_admin= FeatureAdmin(Feature,1)
         request = ""
-        features = Feature.objects.all()
+        features = Feature.objects.all().order_by('pk')
         csv_response = download_csv(f_admin, request, features)
 
 
@@ -949,7 +948,7 @@ class GeoRESTTest(TestCase):
 
         f_admin= FeatureAdmin(Feature,1)
         request = ""
-        features = Feature.objects.all()
+        features = Feature.objects.all().order_by('pk')
         csv_response = download_csv(f_admin, request, features)
 
 
