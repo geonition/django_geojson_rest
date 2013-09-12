@@ -300,7 +300,7 @@ class PropertyView(RequestHandler):
 def get_user(request, username = '@me'):
         
     if username == '@me':
-        user = request.user
+        user = User.objects.get(pk=request.user.pk)
     else:
         user = User.objects.get(username = username)
     
