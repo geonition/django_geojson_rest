@@ -271,3 +271,7 @@ class Feature(FeatureBase):
         self.json_str = json.dumps(self.to_json())
         self.save(*args, **kwargs)
 
+    def delete(self, *args, **kwargs):
+        Property.objects.filter(feature__id=self.id).delete()
+        super(Feature, self).delete()
+
