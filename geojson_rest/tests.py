@@ -154,7 +154,9 @@ class GeoRESTTest(TestCase):
         self.client.logout()
 
         #try to get a feature
-        response = self.client.delete(reverse('feat') + '/@me/@self/' + str(id))
+        self.client.login(username = 'user2',
+                          password = 'passwd')
+        response = self.client.delete(reverse('feat') + '/user1/@self/' + str(id))
         self.assertEqual(response.status_code,
                           403,
                           'The response was not a 403, other users public feature might be deleted by not signed in user')
@@ -749,7 +751,7 @@ class GeoRESTTest(TestCase):
                                     json.dumps({'another': 'first saved'}),
                                     content_type = 'application/json')
         #query all user1 properties
-        response = self.client.get('%s/user1' % reverse('prop'))
+        response = self.client.get('%s/user1/test_group' % reverse('prop'))
         self.assertTrue(json.loads(response.content).has_key('totalResults'),
                         'The returned collection did not have key totalResults')
         self.assertTrue(json.loads(response.content).has_key('entry'),
