@@ -239,9 +239,6 @@ class Feature(FeatureBase):
         super(Feature, self).save(*args, **kwargs)
         self.properties.add(prop)
 
-        # kind of a cache for json
-        self.json_str = json.dumps(self.to_json())
-        super(Feature, self).save(*args, **kwargs)
 
     def update(self, feature, user, *args, **kwargs):
         """
