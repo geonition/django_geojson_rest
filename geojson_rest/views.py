@@ -298,14 +298,13 @@ class PropertyView(RequestHandler):
 
     
 def get_user(request, username = '@me'):
-    #from gntauth.views import create_anonymous_user
+    from gntauth.views import create_anonymous_user
         
     if username == '@me':
         try:
             user = User.objects.get(pk=request.user.pk)
         except ObjectDoesNotExist:
-            #user = create_anonymous_user(request)
-            pass
+            user = create_anonymous_user(request)
     else:
         user = User.objects.get(username = username)
     
