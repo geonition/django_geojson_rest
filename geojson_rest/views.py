@@ -198,7 +198,8 @@ class PropertyView(RequestHandler):
         else:
             property_collection = {
                 'totalResults': len(properties),
-                'entry': 'ENTRY'
+                'entry': 'ENTRY',
+                'id' : properties[0].id
             }
             collection_str = json.dumps(property_collection)
             collection_str = collection_str.replace(
