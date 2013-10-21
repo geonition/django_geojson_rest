@@ -13,6 +13,7 @@ from geonition_utils.http import HttpResponseUnauthorized
 from geonition_utils.views import RequestHandler
 from geojson_rest.models import Feature
 from geojson_rest.models import Property
+from geojson_rest.utils import send_error_mail
 
 class FeatureView(RequestHandler):
 
@@ -106,7 +107,11 @@ class FeatureView(RequestHandler):
         group = group[:50]
         
         # load the json and validate format
-        json_object = json.loads(request.body)
+        try:
+            json_object = json.loads(request.body)
+        except ValueError:
+            send_error_mail('request.user: %s\n\nThis sould be json string but is not: %s\n\n' % (request.user,request.body))
+            return HttpResponseBadRequest('invalid json')
         user = get_user(request,
                         username = user)
         
@@ -143,7 +148,11 @@ class FeatureView(RequestHandler):
             return HttpResponseForbidden('You can only update your own features')
         
         update_feature = Feature.objects.get(id = feature)
-        json_object = json.loads(request.body)
+        try:
+            json_object = json.loads(request.body)
+        except ValueError:
+            send_error_mail('request.user: %s\n\nThis sould be json string but is not: %s\n\n' % (request.user,request.body))
+            return HttpResponseBadRequest('invalid json')
         update_feature.update(json_object, request.user)
             
         return HttpResponse(json.dumps(update_feature.to_json()))
@@ -215,7 +224,11 @@ class PropertyView(RequestHandler):
         group = group[:50]
         
         # load the json and validate format
-        json_object = json.loads(request.body)
+        try:
+            json_object = json.loads(request.body)
+        except ValueError:
+            send_error_mail('request.user: %s\n\nThis sould be json string but is not: %s\n\n' % (request.user,request.body))
+            return HttpResponseBadRequest('invalid json')
         user = get_user(request,
                         username = user)
         if user == None:
@@ -262,7 +275,11 @@ class PropertyView(RequestHandler):
             return HttpResponseBadRequest("You need to provide a property id "
                                           "to make this request")
         else:
-            json_object = json.loads(request.body)
+            try:
+                json_object = json.loads(request.body)
+            except ValueError:
+                send_error_mail('request.user: %s\n\nThis sould be json string but is not: %s\n\n' % (request.user,request.body))
+                return HttpResponseBadRequest('invalid json')
             user = get_user(request, user)
             if user == request.user:
                 property = Property.objects.get(id = property,
