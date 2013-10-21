@@ -322,6 +322,7 @@ def get_user(request, username = '@me'):
         try:
             user = User.objects.get(pk=request.user.pk)
         except ObjectDoesNotExist:
+            send_error_mail(request,'somehow a user manages to post a feature or property without first creating a session.\nrequest.body: %s' % request.body)
             user = create_anonymous_user(request)
     else:
         user = User.objects.get(username = username)
