@@ -110,7 +110,7 @@ class FeatureView(RequestHandler):
         try:
             json_object = json.loads(request.body)
         except ValueError:
-            send_error_mail('request.user: %s\n\nThis sould be json string but is not: %s\n\n' % (request.user,request.body))
+            send_error_mail(request,'This sould be json string but is not: %s\n\n' % request.body)
             return HttpResponseBadRequest('invalid json')
         user = get_user(request,
                         username = user)
