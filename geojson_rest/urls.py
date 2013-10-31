@@ -5,6 +5,10 @@ from views import FeatureView
 from views import PropertyView
 
 urlpatterns = patterns('geojson_rest.views',
+    url(r'^featurecount/(?P<data_group>@?[-+_\w]+)/$',
+        'featurecount',
+        name="featurecount"),
+
 
     url(r'^feat$',
         FeatureView.as_view(),

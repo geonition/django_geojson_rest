@@ -15,6 +15,11 @@ from geojson_rest.models import Feature
 from geojson_rest.models import Property
 from geojson_rest.utils import send_error_mail
 
+def featurecount(request, data_group):
+    count = Feature.objects.filter(group=data_group).count()
+    return HttpResponse(str(count))
+ 
+
 class FeatureView(RequestHandler):
 
     def get(self,
