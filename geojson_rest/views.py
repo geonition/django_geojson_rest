@@ -135,7 +135,7 @@ class FeatureView(RequestHandler):
                                user.username,
                                group,
                                new_feature.id)
-        created_entity = json.dumps(new_feature.to_json())
+        created_entity = new_feature.get_json_str()
         
         return HttpResponseCreated(uri, created_entity)
 
@@ -160,7 +160,7 @@ class FeatureView(RequestHandler):
             return HttpResponseBadRequest('invalid json')
         update_feature.update(json_object, request.user)
             
-        return HttpResponse(json.dumps(update_feature.to_json()))
+        return HttpResponse(update_feature.get_json_str())
 
     def delete(self,
                request,
@@ -208,7 +208,7 @@ class PropertyView(RequestHandler):
         if len(properties) == 0:
             return HttpResponseNotFound("The property you queried was not found")
         elif len(properties) == 1:
-            return HttpResponse(json.dumps(properties[0].to_json()))
+            return HttpResponse(properties[0].get_json_str())
         else:
             property_collection = {
                 'totalResults': len(properties),
@@ -264,7 +264,7 @@ class PropertyView(RequestHandler):
                                       feature,
                                       new_property.id)
         
-        created_entity = json.dumps(new_property.to_json())
+        created_entity = new_property.get_json_str()
         
         return HttpResponseCreated(uri, created_entity)
         
@@ -296,7 +296,7 @@ class PropertyView(RequestHandler):
             else:
                 return HttpResponseForbidden('You cannot update others properties')
         
-        return HttpResponse(json.dumps(property.to_json()))
+        return HttpResponse(property.get_json_str())
     
     def delete(self,
             request,
