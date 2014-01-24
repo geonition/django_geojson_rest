@@ -28,6 +28,8 @@ class FeatureView(RequestHandler):
             group = '@self',
             feature = None):
         
+        if user == '@all' and group == 'Q-mita-ajattelet-tulevaisuuden-k-1':
+            return HttpResponse(open(getattr(settings,'STATIC_ROOT','/tmp/') + 'json/Q-mita-ajattelet-tulevaisuuden-k-1-features.json').read())
         #do not do anything if user has not created a session
         if not request.user.is_authenticated():
             return HttpResponseUnauthorized("The request has to be made by a"
@@ -191,6 +193,9 @@ class PropertyView(RequestHandler):
             group = '@self',
             feature = None,
             property = None):
+
+        if user == '@all' and group == 'Q-mita-ajattelet-tulevaisuuden-k-1':
+            return HttpResponse(open(getattr(settings,'STATIC_ROOT','/tmp/') + 'json/Q-mita-ajattelet-tulevaisuuden-k-1-properties.json').read())
         
         properties = [] #default empty list
         
